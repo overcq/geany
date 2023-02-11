@@ -22,6 +22,7 @@
 #ifndef GEANY_MAIN_H
 #define GEANY_MAIN_H 1
 
+#include <stdbool.h>
 #include <glib.h>
 
 G_BEGIN_DECLS

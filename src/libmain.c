@@ -116,7 +116,7 @@ static gboolean no_plugins = FALSE;
 static gboolean dummy = FALSE;
 
 /* in alphabetical order of short options */
-static GOptionEntry entries[] =
+static GOptionEntry Q_options_S_entries[] =
 {
 	{ "column", 0, 0, G_OPTION_ARG_INT, &cl_options.goto_column, N_("Set initial column number to COLUMN for the first opened file (useful in conjunction with --line)"), N_("COLUMN") },
 	{ "config", 'c', 0, G_OPTION_ARG_FILENAME, &alternate_config, N_("Use alternate configuration directory DIR"), N_("DIR") },
@@ -148,39 +148,34 @@ static GOptionEntry entries[] =
 };
 
 
-static void setup_window_position(void)
-{
-	/* interprets the saved window geometry */
-	if (prefs.save_wingeom)
-	{
-		if (ui_prefs.geometry[2] != -1 && ui_prefs.geometry[3] != -1)
-		{
-			gtk_window_set_default_size(GTK_WINDOW(main_widgets.window),
-				ui_prefs.geometry[2], ui_prefs.geometry[3]);
+static
+void
+setup_window_position( void
+){  if( prefs.save_wingeom )
+	{   if( ui_prefs.geometry[4] == 1 )
+		{   gtk_window_maximize( GTK_WINDOW( main_widgets.window ));
+		    return;
 		}
-	}
-
-	if (prefs.save_winpos)
-	{
-		if (ui_prefs.geometry[0] != -1 && ui_prefs.geometry[1] != -1)
-		{
-			gtk_window_move(GTK_WINDOW(main_widgets.window),
-				ui_prefs.geometry[0], ui_prefs.geometry[1]);
-		}
-		if (ui_prefs.geometry[4] == 1)
-		{
-			gtk_window_maximize(GTK_WINDOW(main_widgets.window));
-		}
-	}
+		if( ui_prefs.geometry[2] != -1
+		&& ui_prefs.geometry[3] != -1
+		)
+			gtk_window_set_default_size( GTK_WINDOW( main_widgets.window ), ui_prefs.geometry[2], ui_prefs.geometry[3]);
+    }
+	if( prefs.save_winpos
+	&& ui_prefs.geometry[0] != -1
+	&& ui_prefs.geometry[1] != -1
+	)
+			gtk_window_move( GTK_WINDOW( main_widgets.window ), ui_prefs.geometry[0], ui_prefs.geometry[1] );
 }
 
 
 /* special things for the initial setup of the checkboxes and related stuff
  * an action on a setting is only performed if the setting is not equal to the program default
  * (all the following code is not perfect but it works for the moment) */
-static void apply_settings(void)
-{
-	ui_update_fold_items();
+static
+void
+apply_settings( void
+){  ui_update_fold_items();
 
 	/* toolbar, message window and sidebar are by default visible, so don't change it if it is true */
 	toolbar_show_hide();
@@ -204,10 +199,8 @@ static void apply_settings(void)
 	ui_update_view_editor_menu_items();
 
 	/* hide statusbar if desired */
-	if (! interface_prefs.statusbar_visible)
-	{
-		gtk_widget_hide(ui_widgets.statusbar);
-	}
+	if( !interface_prefs.statusbar_visible )
+		gtk_widget_hide( ui_widgets.statusbar );
 
 	/* set the tab placements of the notebooks */
 	gtk_notebook_set_tab_pos(GTK_NOTEBOOK(main_widgets.notebook), interface_prefs.tab_pos_editor);
@@ -218,12 +211,9 @@ static void apply_settings(void)
 	gtk_notebook_set_show_tabs(GTK_NOTEBOOK(main_widgets.notebook), interface_prefs.show_notebook_tabs);
 
 #ifdef HAVE_VTE
-	if (! vte_info.have_vte)
+	if( !vte_info.have_vte )
 #endif
-	{
-		gtk_widget_set_sensitive(
-			ui_lookup_widget(main_widgets.window, "send_selection_to_vte1"), FALSE);
-	}
+		gtk_widget_set_sensitive( ui_lookup_widget( main_widgets.window, "send_selection_to_vte1" ), FALSE );
 
 	if (interface_prefs.sidebar_pos != GTK_POS_LEFT)
 		ui_swap_sidebar_pos();
@@ -252,19 +242,19 @@ static void main_init(void)
 
 	ui_init_builder();
 
-	main_widgets.window				= NULL;
-	app->project			= NULL;
-	ui_widgets.open_fontsel		= NULL;
-	ui_widgets.open_colorsel	= NULL;
-	ui_widgets.prefs_dialog		= NULL;
+	main_widgets.window = NULL;
+	app->project = NULL;
+	ui_widgets.open_fontsel = NULL;
+	ui_widgets.open_colorsel = NULL;
+	ui_widgets.prefs_dialog = NULL;
 	main_status.main_window_realized = FALSE;
-	file_prefs.tab_order_ltr		= FALSE;
-	file_prefs.tab_order_beside		= FALSE;
-	main_status.quitting			= FALSE;
+	file_prefs.tab_order_ltr = FALSE;
+	file_prefs.tab_order_beside = FALSE;
+	main_status.quitting = FALSE;
 	ignore_callback	= FALSE;
-	ui_prefs.recent_queue				= g_queue_new();
-	ui_prefs.recent_projects_queue		= g_queue_new();
-	main_status.opening_session_files	= 0;
+	ui_prefs.recent_queue = g_queue_new();
+	ui_prefs.recent_projects_queue = g_queue_new();
+	main_status.opening_session_files = 0;
 
 	main_widgets.window = create_window1();
 	g_signal_connect(main_widgets.window, "notify::is-active", G_CALLBACK(on_window_active_changed), NULL);
@@ -302,22 +292,19 @@ static void main_init(void)
 }
 
 
-const gchar *main_get_version_string(void)
-{
-	static gchar full[] = PACKAGE_VERSION " (git >= " REVISION ")";
-
-	if (utils_str_equal(REVISION, "-1"))
+const gchar *
+main_get_version_string( void
+){  if( utils_str_equal( REVISION, "-1" ))
 		return PACKAGE_VERSION;
-	else
-		return full;
+	return PACKAGE_VERSION " (git >= " REVISION ")";
 }
 
 
 /* get the full file path of a command-line argument
  * N.B. the result should be freed and may contain '/../' or '/./ ' */
-gchar *main_get_argv_filename(const gchar *filename)
-{
-	gchar *result;
+gchar *
+main_get_argv_filename( const gchar *filename
+){  gchar *result;
 
 	if (g_path_is_absolute(filename) || utils_is_uri(filename))
 		result = g_strdup(filename);
@@ -338,58 +325,42 @@ gchar *main_get_argv_filename(const gchar *filename)
 }
 
 
-/* get a :line:column specifier from the end of a filename (if present),
- * return the line/column values, and remove the specifier from the string
+/* Get a :line:column specifier from the end of a filename (if present),
+ * return the line/column values, and remove the specifier from the string.
  * (Note that *line and *column must both be set to -1 initially) */
-static void get_line_and_column_from_filename(gchar *filename, gint *line, gint *column)
-{
-	gsize i;
-	gint colon_count = 0;
-	gboolean have_number = FALSE;
-	gsize len;
-
-	g_assert(*line == -1 && *column == -1);
-
-	if (G_UNLIKELY(EMPTY(filename)))
+static
+void
+get_line_and_column_from_filename( char *filename
+, int *line
+, int *column
+){  g_assert( *line == -1 && *column == -1 );
+	if( G_UNLIKELY( EMPTY(filename) ))
 		return;
-
-	/* allow to open files like "test:0" */
-	if (g_file_test(filename, G_FILE_TEST_EXISTS))
+	/* Allows to open files named like “test:0”. */
+	if( g_file_test( filename, G_FILE_TEST_EXISTS ))
 		return;
-
-	len = strlen(filename);
-	for (i = len - 1; i >= 1; i--)
-	{
-		gboolean is_colon = filename[i] == ':';
-		gboolean is_digit = g_ascii_isdigit(filename[i]);
-
-		if (! is_colon && ! is_digit)
-			break;
-
-		if (is_colon)
-		{
-			if (++colon_count > 1)
-				break;	/* bail on 2+ colons in a row */
-		}
-		else
-			colon_count = 0;
-
-		if (is_digit)
-			have_number = TRUE;
-
-		if (is_colon && have_number)
-		{
-			gint number = atoi(&filename[i + 1]);
-
+	_Bool have_number = false;
+	_Bool colon_last = true;
+	size_t len = strlen(filename);
+	for( size_t i = len - 1; i >= 1; i-- )
+	{   _Bool is_digit = g_ascii_isdigit( filename[i] );
+		if( !is_digit
+	    && filename[i] != ':'
+		)
+			return;
+		if( !is_digit )
+		{   if( colon_last )
+				return;	/* Bail on: colon on the end or 2+ colons in a row. */
+			colon_last = true;
+		    int number = atoi( &filename[ i + 1 ] );
 			filename[i] = '\0';
-			have_number = FALSE;
-
 			*column = *line;
 			*line = number;
+    		if( *column != -1 )
+	    		return;	/* Line and column are set, so weʼre done. */
 		}
-
-		if (*column >= 0)
-			break;	/* line and column are set, so we're done */
+		else
+			colon_last = false;
 	}
 }
 
@@ -531,46 +502,48 @@ static void wait_for_input_on_windows(void)
 }
 
 
-static void parse_command_line_options(gint *argc, gchar ***argv)
-{
-	GError *error = NULL;
-	GOptionContext *context;
-	gint i;
-	CommandLineOptions def_clo = {FALSE, NULL, TRUE, -1, -1, FALSE, FALSE, FALSE};
-
+static
+void
+parse_command_line_options( int *argc
+, char ***argv
+){  CommandLineOptions def_clo = {FALSE, NULL, TRUE, -1, -1, FALSE, FALSE, FALSE};
 	/* first initialise cl_options fields with default values */
 	cl_options = def_clo;
-
 	/* the GLib option parser can't handle the +NNN (line number) option,
 	 * so we grab that here and replace it with a no-op */
-	for (i = 1; i < (*argc); i++)
-	{
-		if ((*argv)[i][0] != '+')
+	for( int i = 1; i < (*argc); i++ )
+	{   if( (*argv)[i][0] != '+' )
 			continue;
-
-		cl_options.goto_line = atoi((*argv)[i] + 1);
+	    if( !(*argv)[i][1] )
+      	{   g_printerr( "Geany: invalid option: %s\n", (*argv)[i] );
+	        exit(1);
+       	}
+        char *end;
+        long line = strtol( (*argv)[i] + 1, &end, 10 );
+        if( *end )
+        {   g_printerr( "Geany: invalid option: %s\n", (*argv)[i] );
+		    exit(1);
+        }
+		cl_options.goto_line = line;
 		(*argv)[i] = (gchar *) "--dummy";
 	}
-
-	context = g_option_context_new(_("[FILES...]"));
-
+	GOptionContext *context = g_option_context_new(_("[FILES...]"));
 	g_option_context_set_summary(context, _("A fast and lightweight IDE."));
-	g_option_context_set_description(context, _("Report bugs to https://github.com/geany/geany/issues."));
-	g_option_context_add_main_entries(context, entries, GETTEXT_PACKAGE);
+	g_option_context_set_description(context, _("Report bugs to https://github.com/overcq/geany/issues."));
+	g_option_context_add_main_entries(context, Q_options_S_entries, GETTEXT_PACKAGE);
 	g_option_group_set_translation_domain(g_option_context_get_main_group(context), GETTEXT_PACKAGE);
 	g_option_context_add_group(context, gtk_get_option_group(FALSE));
+    GError *error = NULL;
 	g_option_context_parse(context, argc, argv, &error);
 	g_option_context_free(context);
-
-	if (error != NULL)
-	{
-		g_printerr("Geany: %s\n", error->message);
+	if(error)
+	{   g_printerr( "Geany: %s\n", error->message );
 		g_error_free(error);
 		exit(1);
 	}
 
 	app->debug_mode = verbose_mode;
-	if (app->debug_mode)
+	if( app->debug_mode )
 	{
 		/* Since GLib 2.32 messages logged with levels INFO and DEBUG aren't output by the
 		 * default log handler unless the G_MESSAGES_DEBUG environment variable contains the
@@ -582,9 +555,8 @@ static void parse_command_line_options(gint *argc, gchar ***argv)
 	win32_init_debug_code();
 #endif
 
-	if (show_version)
-	{
-		gchar *build_date = utils_parse_and_format_build_date(__DATE__);
+	if( show_version )
+	{   gchar *build_date = utils_parse_and_format_build_date(__DATE__);
 
 		printf(PACKAGE " %s (", main_get_version_string());
 		/* note for translators: library versions are printed after this */
@@ -599,8 +571,7 @@ static void parse_command_line_options(gint *argc, gchar ***argv)
 	}
 
 	if (print_prefix)
-	{
-		printf("%s\n", GEANY_PREFIX);
+	{   printf("%s\n", GEANY_PREFIX);
 		printf("%s\n", GEANY_DATADIR);
 		printf("%s\n", GEANY_LIBDIR);
 		printf("%s\n", GEANY_LOCALEDIR);
@@ -609,8 +580,7 @@ static void parse_command_line_options(gint *argc, gchar ***argv)
 	}
 
 	if (alternate_config)
-	{
-		geany_debug("Using alternate configuration directory");
+	{   geany_debug("Using alternate configuration directory");
 		app->configdir = alternate_config;
 	}
 	else
@@ -618,30 +588,24 @@ static void parse_command_line_options(gint *argc, gchar ***argv)
 		app->configdir = utils_get_user_config_dir();
 	}
 
-	if (generate_tags)
-	{
-		gboolean ret;
-
-		filetypes_init_types();
-		ret = symbols_generate_global_tags(*argc, *argv, ! no_preprocessing);
+	if( generate_tags )
+	{   filetypes_init_types();
+		_Bool ret = symbols_generate_global_tags(*argc, *argv, ! no_preprocessing);
 		filetypes_free_types();
 		wait_for_input_on_windows();
 		exit(ret);
 	}
 
-	if (ft_names)
-	{
-		print_filetypes();
+	if( ft_names )
+	{   print_filetypes();
 		wait_for_input_on_windows();
 		exit(0);
 	}
 
 #ifdef HAVE_SOCKET
 	socket_info.ignore_socket = cl_options.new_instance;
-	if (cl_options.socket_filename)
-	{
+	if( cl_options.socket_filename )
 		socket_info.file_name = cl_options.socket_filename;
-	}
 #endif
 
 #ifdef HAVE_VTE
@@ -649,9 +613,9 @@ static void parse_command_line_options(gint *argc, gchar ***argv)
 #endif
 	cl_options.ignore_global_tags = ignore_global_tags;
 
-	if (! gtk_init_check(NULL, NULL))
+	if( !gtk_init_check( 0, 0 ))
 	{	/* check whether we have a valid X display and exit if not */
-		g_printerr("Geany: cannot open display\n");
+		g_printerr( "Geany: cannot open display\n" );
 		exit(1);
 	}
 
@@ -662,139 +626,112 @@ static void parse_command_line_options(gint *argc, gchar ***argv)
 }
 
 
-static gint create_config_dir(void)
-{
-	gint saved_errno = 0;
-	gchar *conf_file = NULL;
-	gchar *filedefs_dir = NULL;
-	gchar *templates_dir = NULL;
-
-	if (! g_file_test(app->configdir, G_FILE_TEST_EXISTS))
+static
+int
+create_config_dir( void
+){  int saved_errno;
+    if( !g_file_test( app->configdir, G_FILE_TEST_EXISTS ))
 	{
 #ifndef G_OS_WIN32
 		/* if we are *not* using an alternate config directory, we check whether the old one
 		 * in ~/.geany still exists and try to move it */
-		if (alternate_config == NULL)
-		{
-			gchar *old_dir = g_build_filename(g_get_home_dir(), ".geany", NULL);
+		if( !alternate_config )
+		{   char *old_dir = g_build_filename( g_get_home_dir(), ".geany", NULL );
 			/* move the old config dir if it exists */
-			if (g_file_test(old_dir, G_FILE_TEST_EXISTS))
-			{
-				if (! dialogs_show_question_full(main_widgets.window,
-					GTK_STOCK_YES, GTK_STOCK_QUIT, _("Move it now?"),
-					"%s",
-					_("Geany needs to move your old configuration directory before starting.")))
+			if( g_file_test( old_dir, G_FILE_TEST_EXISTS ))
+			{   if( !dialogs_show_question_full(main_widgets.window, GTK_STOCK_YES, GTK_STOCK_QUIT, _( "Move it now?" ), "%s", _( "Geany needs to move your old configuration directory before starting." )))
 					exit(0);
-
-				if (! g_file_test(app->configdir, G_FILE_TEST_IS_DIR))
-					utils_mkdir(app->configdir, TRUE);
-
-				if (g_rename(old_dir, app->configdir) == 0)
-				{
-					dialogs_show_msgbox(GTK_MESSAGE_INFO,
-						_("Your configuration directory has been successfully moved from \"%s\" to \"%s\"."),
-						old_dir, app->configdir);
-					g_free(old_dir);
-					return 0;
-				}
-				else
-				{
-					dialogs_show_msgbox(GTK_MESSAGE_WARNING,
+				if( !g_file_test( app->configdir, G_FILE_TEST_EXISTS ))
+				{   if( utils_mkdir( app->configdir, true ))
+				    {   dialogs_show_msgbox( GTK_MESSAGE_WARNING, _( "New configuration directory \"%s\" cannot be created." ), app->configdir );
+				        exit(1);
+				    }
+    				if( !g_rename( old_dir, app->configdir ))
+	    			{   dialogs_show_msgbox( GTK_MESSAGE_INFO, _( "Your configuration directory has been successfully moved from \"%s\" to \"%s\"." ), old_dir, app->configdir );
+					    g_free( old_dir );
+    					return 0;
+	    			}
+					dialogs_show_msgbox( GTK_MESSAGE_WARNING,
 						/* for translators: the third %s in brackets is the error message which
 						 * describes why moving the dir didn't work */
 						_("Your old configuration directory \"%s\" could not be moved to \"%s\" (%s). "
 						  "Please move manually the directory to the new location."),
 						old_dir, app->configdir, g_strerror(errno));
+					exit(1);
+	    		}else
+				{   dialogs_show_msgbox( GTK_MESSAGE_WARNING, _( "New configuration directory \"%s\" was created externally before moved." ), app->configdir );
+				    g_free( old_dir );
+				    return 0;
 				}
 			}
-			g_free(old_dir);
+			g_free( old_dir );
 		}
 #endif
-		geany_debug("Creating configuration directory");
-		saved_errno = utils_mkdir(app->configdir, TRUE);
+		geany_debug( "Creating configuration directory" );
+		saved_errno = utils_mkdir( app->configdir, true );
+		if( saved_errno )
+		    return saved_errno;
 	}
-
-	conf_file = g_build_filename(app->configdir, "geany.conf", NULL);
-	filedefs_dir = g_build_filename(app->configdir, GEANY_FILEDEFS_SUBDIR, NULL);
-	templates_dir = g_build_filename(app->configdir, GEANY_TEMPLATES_SUBDIR, NULL);
-
-	if (saved_errno == 0 && ! g_file_test(conf_file, G_FILE_TEST_EXISTS))
-	{	/* check whether geany.conf can be written */
-		saved_errno = utils_is_file_writable(app->configdir);
-	}
-
+	saved_errno = utils_is_file_writable( app->configdir );
+	if( saved_errno )
+        return saved_errno;
+	char *conf_file = g_build_filename( app->configdir, "geany.conf", NULL );
+	char *filedefs_dir = g_build_filename( app->configdir, GEANY_FILEDEFS_SUBDIR, NULL );
+	char *templates_dir = g_build_filename( app->configdir, GEANY_TEMPLATES_SUBDIR, NULL );
 	/* make subdir for filetype definitions */
-	if (saved_errno == 0)
-	{
-		gchar *filedefs_readme = g_build_filename(app->configdir,
-					GEANY_FILEDEFS_SUBDIR, "filetypes.README", NULL);
-
-		if (! g_file_test(filedefs_dir, G_FILE_TEST_EXISTS))
-		{
-			saved_errno = utils_mkdir(filedefs_dir, FALSE);
-		}
-		if (saved_errno == 0 && ! g_file_test(filedefs_readme, G_FILE_TEST_EXISTS))
-		{
-			gchar *text = g_strconcat(
+	if( !g_file_test( filedefs_dir, G_FILE_TEST_EXISTS ))
+	{   saved_errno = utils_mkdir( filedefs_dir, false );
+	    if( saved_errno )
+	        goto End;
+    	char *filedefs_readme = g_build_filename( app->configdir, GEANY_FILEDEFS_SUBDIR, "filetypes.README", NULL );
+		if( !g_file_test( filedefs_readme, G_FILE_TEST_EXISTS ))
+		{   char *text = g_strconcat(
 "Copy files from ", app->datadir, "/filedefs to this directory to overwrite "
 "them. To use the defaults, just delete the file in this directory.\nFor more information read "
-"the documentation (in ", app->docdir, G_DIR_SEPARATOR_S "index.html or visit " GEANY_HOMEPAGE ").", NULL);
-			utils_write_file(filedefs_readme, text);
+"the documentation (in ", app->docdir, G_DIR_SEPARATOR_S "index.html or visit " GEANY_HOMEPAGE ").", NULL );
+			utils_write_file( filedefs_readme, text );
 			g_free(text);
 		}
-		g_free(filedefs_readme);
+		g_free( filedefs_readme );
 	}
 
 	/* make subdir for template files */
-	if (saved_errno == 0)
-	{
-		gchar *templates_readme = g_build_filename(app->configdir, GEANY_TEMPLATES_SUBDIR,
-						"templates.README", NULL);
-
-		if (! g_file_test(templates_dir, G_FILE_TEST_EXISTS))
-		{
-			saved_errno = utils_mkdir(templates_dir, FALSE);
-		}
-		if (saved_errno == 0 && ! g_file_test(templates_readme, G_FILE_TEST_EXISTS))
-		{
-			gchar *text = g_strconcat(
+	if( !g_file_test( templates_dir, G_FILE_TEST_EXISTS ))
+	{   saved_errno = utils_mkdir( templates_dir, false );
+	    if( saved_errno )
+	        goto End;
+    	char *templates_readme = g_build_filename( app->configdir, GEANY_TEMPLATES_SUBDIR, "templates.README", NULL );
+		if( !g_file_test( templates_readme, G_FILE_TEST_EXISTS ))
+		{   char *text = g_strconcat(
 "There are several template files in this directory. For these templates you can use wildcards.\n\
-For more information read the documentation (in ", app->docdir, G_DIR_SEPARATOR_S "index.html or visit " GEANY_HOMEPAGE ").",
-					NULL);
-			utils_write_file(templates_readme, text);
+For more information read the documentation (in ", app->docdir, G_DIR_SEPARATOR_S "index.html or visit " GEANY_HOMEPAGE ").", NULL );
+			utils_write_file( templates_readme, text );
 			g_free(text);
 		}
-		g_free(templates_readme);
+		g_free( templates_readme );
 	}
 
-	g_free(filedefs_dir);
+End:g_free(filedefs_dir);
 	g_free(templates_dir);
 	g_free(conf_file);
-
-	return saved_errno;
+	return 0;
 }
 
 
 /* Returns 0 if config dir is OK. */
-static gint setup_config_dir(void)
-{
-	gint mkdir_result = 0;
-
-	mkdir_result = create_config_dir();
-	if (mkdir_result != 0)
-	{
-		if (! dialogs_show_question(
+static
+int
+setup_config_dir( void
+){  int mkdir_result = create_config_dir();
+	if( mkdir_result )
+	{	if (! dialogs_show_question(
 			_("Configuration directory could not be created (%s).\nThere could be some problems "
 			  "using Geany without a configuration directory.\nStart Geany anyway?"),
-			  g_strerror(mkdir_result)))
-		{
+			  g_strerror( mkdir_result ))
+	    )
 			exit(0);
-		}
-	}
-	/* make configdir a real path */
-	if (g_file_test(app->configdir, G_FILE_TEST_EXISTS))
-		SETPTR(app->configdir, utils_get_real_path(app->configdir));
-
+	}else
+		SETPTR( app->configdir, utils_get_real_path( app->configdir )); // Make configdir a real path.
 	return mkdir_result;
 }
 
@@ -829,9 +766,9 @@ gboolean main_handle_filename(const gchar *locale_filename)
 		return FALSE;
 
 	get_line_and_column_from_filename(filename, &line, &column);
-	if (line >= 0)
+	if( line != -1 )
 		cl_options.goto_line = line;
-	if (column >= 0)
+	if( column != -1 )
 		cl_options.goto_column = column;
 
 	if (g_file_test(filename, G_FILE_TEST_IS_REGULAR))
@@ -1174,11 +1111,10 @@ gint main_lib(gint argc, gchar **argv)
 	ui_create_recent_menus();
 
 	ui_set_statusbar(TRUE, _("This is Geany %s."), main_get_version_string());
-	if (config_dir_result != 0)
-	{
-		const gchar *message = _("Configuration directory could not be created (%s).");
-		ui_set_statusbar(TRUE, message, g_strerror(config_dir_result));
-		g_warning(message, g_strerror(config_dir_result));
+	if( config_dir_result )
+	{   const char *message = _( "Configuration directory could not be created (%s)." );
+		ui_set_statusbar( TRUE, message, g_strerror( config_dir_result ));
+		g_warning( message, g_strerror( config_dir_result ));
 	}
 #ifdef HAVE_SOCKET
 	if (socket_info.lock_socket == -1)
