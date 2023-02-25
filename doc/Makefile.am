@@ -34,7 +34,7 @@ doc_DATA = \
 	$(top_srcdir)/ChangeLog \
 	$(top_srcdir)/COPYING \
 	$(top_srcdir)/NEWS \
-	$(top_srcdir)/README \
+	$(top_srcdir)/README.md \
 	$(top_srcdir)/THANKS \
 	$(top_srcdir)/TODO
 

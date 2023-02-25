@@ -145,7 +145,7 @@ GeanyDocument* document_find_by_real_path(const gchar *realname)
 	{
 		GeanyDocument *doc = documents[i];
 
-		if (! doc->is_valid || ! doc->real_path)
+		if( !doc->is_valid || !doc->real_path )
 			continue;
 
 		if (utils_filenamecmp(realname, doc->real_path) == 0)
@@ -194,7 +194,7 @@ GeanyDocument *document_find_by_filename(const gchar *utf8_filename)
 	{
 		doc = documents[i];
 
-		if (! doc->is_valid || doc->file_name == NULL)
+		if( !doc->is_valid || !doc->file_name )
 			continue;
 
 		if (utils_filenamecmp(utf8_filename, doc->file_name) == 0)
@@ -261,22 +261,16 @@ GeanyDocument *document_find_by_id(guint id)
 
 
 /* gets the widget the main_widgets.notebook consider is its child for this document */
-static GtkWidget *document_get_notebook_child(GeanyDocument *doc)
-{
-	GtkWidget *parent;
-	GtkWidget *child;
-
-	g_return_val_if_fail(doc != NULL, NULL);
-
-	child = GTK_WIDGET(doc->editor->sci);
-	parent = gtk_widget_get_parent(child);
+static
+GtkWidget *
+document_get_notebook_child( GeanyDocument *doc
+){	GtkWidget *child = GTK_WIDGET( doc->editor->sci );
+	GtkWidget *parent = gtk_widget_get_parent(child);
 	/* search for the direct notebook child, mirroring document_get_from_page() */
-	while (parent && ! GTK_IS_NOTEBOOK(parent))
-	{
-		child = parent;
+	while( parent && !GTK_IS_NOTEBOOK(parent) )
+	{	child = parent;
 		parent = gtk_widget_get_parent(child);
 	}
-
 	return child;
 }
 
@@ -413,8 +407,6 @@ gchar *document_get_basename_for_display(GeanyDocument *doc, gint length)
 {
 	gchar *base_name, *short_name;
 
-	g_return_val_if_fail(doc != NULL, NULL);
-
 	if (length < 0)
 		length = 30;
 
@@ -431,8 +423,6 @@ void document_update_tab_label(GeanyDocument *doc)
 {
 	gchar *short_name;
 	GtkWidget *parent;
-
-	g_return_if_fail(doc != NULL);
 
 	short_name = document_get_basename_for_display(doc, interface_prefs.tab_label_len);
 
@@ -459,8 +449,6 @@ void document_update_tab_label(GeanyDocument *doc)
 GEANY_API_SYMBOL
 void document_set_text_changed(GeanyDocument *doc, gboolean changed)
 {
-	g_return_if_fail(doc != NULL);
-
 	doc->changed = changed;
 
 	if (! main_status.quitting)
@@ -511,8 +499,6 @@ static void monitor_file_changed_cb(G_GNUC_UNUSED GFileMonitor *monitor, G_GNUC_
 									G_GNUC_UNUSED GFile *other_file, GFileMonitorEvent event,
 									GeanyDocument *doc)
 {
-	g_return_if_fail(doc != NULL);
-
 	if (file_prefs.disk_check_timeout == 0)
 		return;
 
@@ -548,8 +534,6 @@ static void monitor_file_changed_cb(G_GNUC_UNUSED GFileMonitor *monitor, G_GNUC_
 
 static void document_stop_file_monitoring(GeanyDocument *doc)
 {
-	g_return_if_fail(doc != NULL);
-
 	if (doc->priv->monitor != NULL)
 	{
 		g_object_unref(doc->priv->monitor);
@@ -560,7 +544,6 @@ static void document_stop_file_monitoring(GeanyDocument *doc)
 
 static void monitor_file_setup(GeanyDocument *doc)
 {
-	g_return_if_fail(doc != NULL);
 	/* Disable file monitoring completely for remote files (i.e. remote GIO files) as GFileMonitor
 	 * doesn't work at all for remote files and legacy polling is too slow. */
 	if (! doc->priv->is_remote)
@@ -628,7 +611,7 @@ static GeanyDocument *document_create(const gchar *utf8_filename)
 	{
 		doc = document_get_current();
 		/* remove the empty document first */
-		if (doc != NULL && doc->file_name == NULL && ! doc->changed)
+		if( !doc->file_name && !doc->changed )
 			/* prevent immediately opening another new doc with
 			 * new_document_after_close pref */
 			remove_page(0);
@@ -690,9 +673,11 @@ static GeanyDocument *document_create(const gchar *utf8_filename)
 GEANY_API_SYMBOL
 gboolean document_close(GeanyDocument *doc)
 {
-	g_return_val_if_fail(doc, FALSE);
-
-	return document_remove_page(document_get_notebook_page(doc));
+	if( !doc->file_name && !doc->changed )
+		return false;
+	_Bool ret = document_remove_page(document_get_notebook_page(doc));
+	document_new_file_if_non_open();
+	return ret;
 }
 
 
@@ -702,17 +687,15 @@ static gboolean remove_page(guint page_num)
 {
 	GeanyDocument *doc = document_get_from_page(page_num);
 
-	g_return_val_if_fail(doc != NULL, FALSE);
-
 	/* if we're closing all, document_account_for_unsaved() has been called already, no need to ask again. */
-	if (! main_status.closing_all && doc->changed && ! dialogs_show_unsaved_file(doc))
+	if( !main_status.closing_all && doc->changed && !dialogs_show_unsaved_file(doc) )
 		return FALSE;
 
 	/* tell any plugins that the document is about to be closed */
 	g_signal_emit_by_name(geany_object, "document-close", doc);
 
 	/* Checking real_path makes it likely the file exists on disk */
-	if (! main_status.closing_all && doc->real_path != NULL)
+	if( !main_status.closing_all && doc->real_path )
 		ui_add_recent_document(doc);
 
 	g_datalist_clear(&doc->priv->data);
@@ -720,7 +703,7 @@ static gboolean remove_page(guint page_num)
 	doc->is_valid = FALSE;
 	doc->id = 0;
 
-	if (main_status.quitting)
+	if( main_status.quitting )
 	{
 		/* we need to destroy the ScintillaWidget so our handlers on it are
 		 * disconnected before we free any data they may use (like the editor).
@@ -760,15 +743,6 @@ static gboolean remove_page(guint page_num)
 	/* reset document settings to defaults for re-use */
 	memset(doc, 0, sizeof(GeanyDocument));
 
-	if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(main_widgets.notebook)) == 0)
-	{
-		sidebar_update_tag_list(NULL, FALSE);
-		ui_set_window_title(NULL);
-		ui_save_buttons_toggle(FALSE);
-		ui_update_popup_reundo_items(NULL);
-		ui_document_buttons_update();
-		build_menu_update(NULL);
-	}
 	return TRUE;
 }
 
@@ -786,7 +760,7 @@ gboolean document_remove_page(guint page_num)
 {
 	gboolean done = remove_page(page_num);
 
-	if (done && ui_prefs.new_document_after_close)
+	if(done)
 		document_new_file_if_non_open();
 
 	return done;
@@ -805,7 +779,7 @@ static void store_saved_encoding(GeanyDocument *doc)
 /* Opens a new empty document only if there are no other documents open */
 GeanyDocument *document_new_file_if_non_open(void)
 {
-	if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(main_widgets.notebook)) == 0)
+	if( !gtk_notebook_get_n_pages( GTK_NOTEBOOK( main_widgets.notebook )))
 		return document_new_file(NULL, NULL, NULL);
 
 	return NULL;
@@ -837,10 +811,10 @@ GeanyDocument *document_new_file(const gchar *utf8_filename, GeanyFiletype *ft, 
 	}
 	doc = document_create(utf8_filename);
 
-	g_assert(doc != NULL);
+	g_assert(doc);
 
 	sci_set_undo_collection(doc->editor->sci, FALSE); /* avoid creation of an undo action */
-	if (text)
+	if(text)
 	{
 		GString *template = g_string_new(text);
 		utils_ensure_same_eol_characters(template, file_prefs.default_eol_character);
@@ -1298,7 +1272,7 @@ GeanyDocument *document_open_file_full(GeanyDocument *doc, const gchar *filename
 	UndoReloadData *undo_reload_data;
 	gboolean add_undo_reload_action;
 
-	g_return_val_if_fail(doc == NULL || doc->is_valid, NULL);
+	g_return_val_if_fail( !doc || doc->is_valid, NULL );
 
 	if (reload)
 	{
@@ -1324,7 +1298,7 @@ GeanyDocument *document_open_file_full(GeanyDocument *doc, const gchar *filename
 
 		/* if file is already open, switch to it and go */
 		doc = document_find_by_filename(utf8_filename);
-		if (doc != NULL)
+		if(doc)
 		{
 			ui_add_recent_document(doc);	/* either add or reorder recent item */
 			/* show the doc before reload dialog */
@@ -1332,7 +1306,7 @@ GeanyDocument *document_open_file_full(GeanyDocument *doc, const gchar *filename
 			document_check_disk_status(doc, TRUE);	/* force a file changed check */
 		}
 	}
-	if (reload || doc == NULL)
+	if( reload || !doc )
 	{	/* doc possibly changed */
 		display_filename = utils_str_middle_truncate(utf8_filename, 100);
 
@@ -1601,8 +1575,6 @@ gboolean document_reload_force(GeanyDocument *doc, const gchar *forced_enc)
 	GeanyDocument *new_doc;
 	GtkWidget *bar;
 
-	g_return_val_if_fail(doc != NULL, FALSE);
-
 	/* Cancel resave bar if still open from previous file deletion */
 	if (doc->priv->info_bars[MSG_TYPE_RESAVE] != NULL)
 		gtk_info_bar_response(GTK_INFO_BAR(doc->priv->info_bars[MSG_TYPE_RESAVE]), GTK_RESPONSE_CANCEL);
@@ -1640,8 +1612,6 @@ gboolean document_reload_prompt(GeanyDocument *doc, const gchar *forced_enc)
 	gchar *base_name;
 	gboolean prompt, result = FALSE;
 
-	g_return_val_if_fail(doc != NULL, FALSE);
-
 	/* No need to reload "untitled" (non-file-backed) documents */
 	if (doc->file_name == NULL)
 		return FALSE;
@@ -1671,8 +1641,6 @@ gboolean document_reload_prompt(GeanyDocument *doc, const gchar *forced_enc)
 static void document_update_timestamp(GeanyDocument *doc, const gchar *locale_filename)
 {
 #ifndef USE_GIO_FILEMON
-	g_return_if_fail(doc != NULL);
-
 	get_mtime(locale_filename, &doc->priv->mtime); /* get the modification time from file and keep it */
 #endif
 }
@@ -1710,8 +1678,7 @@ static void replace_header_filename(GeanyDocument *doc)
 	gchar *filename;
 	struct Sci_TextToFind ttf;
 
-	g_return_if_fail(doc != NULL);
-	g_return_if_fail(doc->file_type != NULL);
+	g_return_if_fail( doc->file_type );
 
 	filebase = g_regex_escape_string(GEANY_STRING_UNTITLED, -1);
 	if (doc->file_type->extension)
@@ -1797,9 +1764,7 @@ static void unprotect_document(GeanyDocument *doc)
  * new files. */
 gboolean document_need_save_as(GeanyDocument *doc)
 {
-	g_return_val_if_fail(doc != NULL, FALSE);
-
-	return (doc->file_name == NULL || !g_path_is_absolute(doc->file_name));
+	return !doc->file_name || !g_path_is_absolute( doc->file_name );
 }
 
 
@@ -1819,8 +1784,6 @@ gboolean document_save_file_as(GeanyDocument *doc, const gchar *utf8_fname)
 {
 	gboolean ret;
 	gboolean new_file;
-
-	g_return_val_if_fail(doc != NULL, FALSE);
 
 	new_file = document_need_save_as(doc) || (utf8_fname != NULL && strcmp(doc->file_name, utf8_fname) != 0);
 	if (utf8_fname != NULL)
@@ -2022,7 +1985,6 @@ static gchar *save_doc(GeanyDocument *doc, const gchar *locale_filename,
 {
 	gchar *err;
 
-	g_return_val_if_fail(doc != NULL, g_strdup(g_strerror(EINVAL)));
 	g_return_val_if_fail(data != NULL, g_strdup(g_strerror(EINVAL)));
 
 	err = write_data_to_disk(locale_filename, data, len);
@@ -2108,8 +2070,6 @@ gboolean document_save_file(GeanyDocument *doc, gboolean force)
 	gsize len;
 	gchar *locale_filename;
 	const GeanyFilePrefs *fp;
-
-	g_return_val_if_fail(doc != NULL, FALSE);
 
 	if (document_need_save_as(doc))
 	{
@@ -2246,7 +2206,6 @@ gboolean document_search_bar_find(GeanyDocument *doc, const gchar *text, gboolea
 	struct Sci_TextToFind ttf;
 
 	g_return_val_if_fail(text != NULL, FALSE);
-	g_return_val_if_fail(doc != NULL, FALSE);
 	if (! *text)
 		return TRUE;
 
@@ -2321,7 +2280,7 @@ gint document_find_text(GeanyDocument *doc, const gchar *text, const gchar *orig
 {
 	gint selection_end, selection_start, search_pos;
 
-	g_return_val_if_fail(doc != NULL && text != NULL, -1);
+	g_return_val_if_fail( text, -1 );
 	if (! *text)
 		return -1;
 
@@ -2401,7 +2360,7 @@ gint document_replace_text(GeanyDocument *doc, const gchar *find_text, const gch
 	gint selection_end, selection_start, search_pos;
 	GeanyMatchInfo *match = NULL;
 
-	g_return_val_if_fail(doc != NULL && find_text != NULL && replace_text != NULL, -1);
+	g_return_val_if_fail( find_text && replace_text, -1 );
 
 	if (! *find_text)
 		return -1;
@@ -2491,7 +2450,7 @@ document_replace_range(GeanyDocument *doc, const gchar *find_text, const gchar *
 	if (new_range_end != NULL)
 		*new_range_end = -1;
 
-	g_return_val_if_fail(doc != NULL && find_text != NULL && replace_text != NULL, 0);
+	g_return_val_if_fail( find_text && replace_text, 0 );
 
 	if (! *find_text || doc->readonly)
 		return 0;
@@ -2525,7 +2484,7 @@ void document_replace_sel(GeanyDocument *doc, const gchar *find_text, const gcha
 	gint max_column = 0, count = 0;
 	gboolean replaced = FALSE;
 
-	g_return_if_fail(doc != NULL && find_text != NULL && replace_text != NULL);
+	g_return_if_fail( find_text && replace_text );
 
 	if (! *find_text)
 		return;
@@ -2625,7 +2584,7 @@ gint document_replace_all(GeanyDocument *doc, const gchar *find_text, const gcha
 		const gchar *original_find_text, const gchar *original_replace_text, GeanyFindFlags flags)
 {
 	gint len, count;
-	g_return_val_if_fail(doc != NULL && find_text != NULL && replace_text != NULL, FALSE);
+	g_return_val_if_fail( find_text && replace_text, FALSE );
 
 	if (! *find_text)
 		return FALSE;
@@ -2787,7 +2746,6 @@ void document_update_tag_list_in_idle(GeanyDocument *doc)
 static void document_load_config(GeanyDocument *doc, GeanyFiletype *type,
 		gboolean filetype_changed)
 {
-	g_return_if_fail(doc);
 	if (type == NULL)
 		type = filetypes[GEANY_FILETYPES_NONE];
 
@@ -2829,7 +2787,6 @@ void document_set_filetype(GeanyDocument *doc, GeanyFiletype *type)
 	gboolean ft_changed;
 	GeanyFiletype *old_ft;
 
-	g_return_if_fail(doc);
 	if (type == NULL)
 		type = filetypes[GEANY_FILETYPES_NONE];
 
@@ -2879,8 +2836,9 @@ void document_reload_config(GeanyDocument *doc)
 GEANY_API_SYMBOL
 void document_set_encoding(GeanyDocument *doc, const gchar *new_encoding)
 {
-	if (doc == NULL || new_encoding == NULL ||
-		utils_str_equal(new_encoding, doc->encoding))
+	if( !new_encoding
+	|| utils_str_equal( new_encoding, doc->encoding )
+	)
 		return;
 
 	g_free(doc->encoding);
@@ -2937,8 +2895,6 @@ void document_undo_add_internal(GeanyDocument *doc, guint type, gpointer data)
 {
 	undo_action *action;
 
-	g_return_if_fail(doc != NULL);
-
 	action = g_new0(undo_action, 1);
 	action->type = type;
 	action->data = data;
@@ -2964,8 +2920,6 @@ void document_undo_add(GeanyDocument *doc, guint type, gpointer data)
 
 gboolean document_can_undo(GeanyDocument *doc)
 {
-	g_return_val_if_fail(doc != NULL, FALSE);
-
 	if (g_trash_stack_height(&doc->priv->undo_actions) > 0 || sci_can_undo(doc->editor->sci))
 		return TRUE;
 	else
@@ -2986,8 +2940,6 @@ static void update_changed_state(GeanyDocument *doc)
 void document_undo(GeanyDocument *doc)
 {
 	undo_action *action;
-
-	g_return_if_fail(doc != NULL);
 
 	action = g_trash_stack_pop(&doc->priv->undo_actions);
 
@@ -3083,8 +3035,6 @@ void document_undo(GeanyDocument *doc)
 
 gboolean document_can_redo(GeanyDocument *doc)
 {
-	g_return_val_if_fail(doc != NULL, FALSE);
-
 	if (g_trash_stack_height(&doc->priv->redo_actions) > 0 || sci_can_redo(doc->editor->sci))
 		return TRUE;
 	else
@@ -3095,8 +3045,6 @@ gboolean document_can_redo(GeanyDocument *doc)
 void document_redo(GeanyDocument *doc)
 {
 	undo_action *action;
-
-	g_return_if_fail(doc != NULL);
 
 	action = g_trash_stack_pop(&doc->priv->redo_actions);
 
@@ -3193,8 +3141,6 @@ static void document_redo_add(GeanyDocument *doc, guint type, gpointer data)
 {
 	undo_action *action;
 
-	g_return_if_fail(doc != NULL);
-
 	action = g_new0(undo_action, 1);
 	action->type = type;
 	action->data = data;
@@ -3251,8 +3197,6 @@ const gchar *document_get_status_widget_class(GeanyDocument *doc)
 {
 	gint status;
 
-	g_return_val_if_fail(doc != NULL, NULL);
-
 	status = document_get_status_id(doc);
 	if (status < 0)
 		return NULL;
@@ -3277,8 +3221,6 @@ GEANY_API_SYMBOL
 const GdkColor *document_get_status_color(GeanyDocument *doc)
 {
 	gint status;
-
-	g_return_val_if_fail(doc != NULL, NULL);
 
 	status = document_get_status_id(doc);
 	if (status < 0)
@@ -3680,8 +3622,6 @@ gboolean document_check_disk_status(GeanyDocument *doc, gboolean force)
 	gchar *locale_filename;
 	FileDiskStatus old_status;
 
-	g_return_val_if_fail(doc != NULL, FALSE);
-
 	/* ignore remote files and documents that have never been saved to disk */
 	if (notebook_switch_in_progress() || file_prefs.disk_check_timeout == 0
 			|| doc->real_path == NULL || doc->priv->is_remote)
@@ -3812,8 +3752,6 @@ gint document_compare_by_tab_order_reverse(gconstpointer a, gconstpointer b)
 
 void document_grab_focus(GeanyDocument *doc)
 {
-	g_return_if_fail(doc != NULL);
-
 	gtk_widget_grab_focus(GTK_WIDGET(doc->editor->sci));
 }
 

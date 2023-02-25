@@ -150,7 +150,7 @@ static GOptionEntry Q_options_S_entries[] =
 
 static
 void
-setup_window_position( void
+E_main_I_setup_window_position( void
 ){  if( prefs.save_wingeom )
 	{   if( ui_prefs.geometry[4] == 1 )
 		{   gtk_window_maximize( GTK_WINDOW( main_widgets.window ));
@@ -179,16 +179,14 @@ apply_settings( void
 
 	/* toolbar, message window and sidebar are by default visible, so don't change it if it is true */
 	toolbar_show_hide();
-	if (! ui_prefs.msgwindow_visible)
-	{
-		ignore_callback = TRUE;
+	if( !ui_prefs.msgwindow_visible )
+	{	ignore_callback = TRUE;
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(ui_lookup_widget(main_widgets.window, "menu_show_messages_window1")), FALSE);
 		gtk_widget_hide(main_widgets.message_window_notebook);
 		ignore_callback = FALSE;
 	}
-	if (! ui_prefs.sidebar_visible)
-	{
-		ignore_callback = TRUE;
+	if( !ui_prefs.sidebar_visible )
+	{	ignore_callback = TRUE;
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(ui_lookup_widget(main_widgets.window, "menu_show_sidebar1")), FALSE);
 		ignore_callback = FALSE;
 	}
@@ -218,8 +216,21 @@ apply_settings( void
 	if (interface_prefs.sidebar_pos != GTK_POS_LEFT)
 		ui_swap_sidebar_pos();
 
-	gtk_orientable_set_orientation(GTK_ORIENTABLE(ui_lookup_widget(main_widgets.window, "vpaned1")),
-		interface_prefs.msgwin_orientation);
+	GtkWidget *widget = ui_lookup_widget( main_widgets.window, "vpaned1" );
+	gtk_orientable_set_orientation( GTK_ORIENTABLE(widget), interface_prefs.msgwin_orientation );
+#if 0
+	GValue size;
+	g_value_init( &size, G_TYPE_INT );
+	g_value_set_int( &size, ui_prefs.msgwindow_size );
+	if( interface_prefs.msgwin_orientation == GTK_ORIENTATION_VERTICAL )
+		g_object_set_property( G_OBJECT( msgwindow.notebook ), "height-request", &size );
+	else
+		g_object_set_property( G_OBJECT( msgwindow.notebook ), "width-request", &size );
+	GValue shrink;
+	g_value_init( &shrink, G_TYPE_BOOLEAN );
+	g_value_set_boolean( &shrink, true );
+	gtk_container_child_set_property( GTK_CONTAINER(widget), msgwindow.notebook, "shrink", &shrink );
+#endif
 }
 
 
@@ -678,7 +689,7 @@ create_config_dir( void
 	char *conf_file = g_build_filename( app->configdir, "geany.conf", NULL );
 	char *filedefs_dir = g_build_filename( app->configdir, GEANY_FILEDEFS_SUBDIR, NULL );
 	char *templates_dir = g_build_filename( app->configdir, GEANY_TEMPLATES_SUBDIR, NULL );
-	/* make subdir for filetype definitions */
+	// Make subdir for filetype definitions.
 	if( !g_file_test( filedefs_dir, G_FILE_TEST_EXISTS ))
 	{   saved_errno = utils_mkdir( filedefs_dir, false );
 	    if( saved_errno )
@@ -694,8 +705,7 @@ create_config_dir( void
 		}
 		g_free( filedefs_readme );
 	}
-
-	/* make subdir for template files */
+	// Make subdir for template files.
 	if( !g_file_test( templates_dir, G_FILE_TEST_EXISTS ))
 	{   saved_errno = utils_mkdir( templates_dir, false );
 	    if( saved_errno )
@@ -710,11 +720,10 @@ For more information read the documentation (in ", app->docdir, G_DIR_SEPARATOR_
 		}
 		g_free( templates_readme );
 	}
-
 End:g_free(filedefs_dir);
 	g_free(templates_dir);
 	g_free(conf_file);
-	return 0;
+	return saved_errno;
 }
 
 
@@ -984,7 +993,7 @@ gint main_lib(gint argc, gchar **argv)
 
 	main_init_headless();
 
-	log_handlers_init();
+	E_log_M();
 
 	setup_paths();
 
@@ -995,10 +1004,10 @@ gint main_lib(gint argc, gchar **argv)
 	app->tm_workspace = tm_get_workspace();
 	parse_command_line_options(&argc, &argv);
 
-#if ! GLIB_CHECK_VERSION(2, 32, 0)
+#if !GLIB_CHECK_VERSION( 2, 32, 0 )
 	/* Initialize GLib's thread system in case any plugins want to use it or their
 	 * dependencies (e.g. WebKit, Soup, ...). Deprecated since GLIB 2.32. */
-	if (!g_thread_supported())
+	if( !g_thread_supported() )
 		g_thread_init(NULL);
 #endif
 
@@ -1012,7 +1021,7 @@ gint main_lib(gint argc, gchar **argv)
 	config_dir_result = setup_config_dir();
 #ifdef HAVE_SOCKET
 	/* check and create (unix domain) socket for remote operation */
-	if (! socket_info.ignore_socket)
+	if( !socket_info.ignore_socket )
 	{
 		gushort socket_port = 0;
 #ifdef G_OS_WIN32
@@ -1059,10 +1068,9 @@ gint main_lib(gint argc, gchar **argv)
 		glib_major_version, glib_minor_version, glib_micro_version);
 
 	os_info = utils_get_os_info_string();
-	if (os_info != NULL)
-	{
-		geany_debug("OS: %s", os_info);
-		g_free(os_info);
+	if( os_info )
+	{	geany_debug( "OS: %s", os_info );
+		g_free( os_info );
 	}
 
 	geany_debug("System data dir: %s", app->datadir);
@@ -1129,7 +1137,7 @@ gint main_lib(gint argc, gchar **argv)
 
 #ifdef HAVE_PLUGINS
 	/* load any enabled plugins before we open any documents */
-	if (want_plugins)
+	if( want_plugins )
 		plugins_load_active();
 #endif
 
@@ -1161,7 +1169,7 @@ gint main_lib(gint argc, gchar **argv)
 	build_menu_update(doc);
 	sidebar_update_tag_list(doc, FALSE);
 
-	setup_window_position();
+	E_main_I_setup_window_position();
 
 	/* finally show the window */
 	document_grab_focus(doc);
@@ -1208,13 +1216,11 @@ static gboolean do_main_quit(void)
 {
 	configuration_save();
 
-	if (app->project != NULL)
-	{
-		if (!project_close(FALSE))   /* save project session files */
-			return FALSE;
-	}
-
-	if (!document_close_all())
+	if( app->project
+	&& !project_close(FALSE)
+	)   /* save project session files */
+		return FALSE;
+	if( !document_close_all() )
 		return FALSE;
 
 	geany_debug("Quitting...");
@@ -1247,7 +1253,7 @@ static gboolean do_main_quit(void)
 	sidebar_finalize();
 	configuration_finalize();
 	filetypes_free_types();
-	log_finalize();
+	E_log_W();
 
 	tm_workspace_free();
 	g_free(app->configdir);

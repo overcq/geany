@@ -67,6 +67,8 @@
 #include <unistd.h>
 #endif
 
+#include <gtk/gtk.h>
+
 /* define the configuration filenames */
 #define PREFS_FILE						"geany.conf"
 #define SESSION_FILE					"session.conf"
@@ -656,6 +658,12 @@ static void save_ui_prefs(GKeyFile *config)
 	g_key_file_set_boolean(config, PACKAGE, "sidebar_visible", ui_prefs.sidebar_visible);
 	g_key_file_set_boolean(config, PACKAGE, "statusbar_visible", interface_prefs.statusbar_visible);
 	g_key_file_set_boolean(config, PACKAGE, "msgwindow_visible", ui_prefs.msgwindow_visible);
+	GtkAllocation alloc;
+	gtk_widget_get_allocation( msgwindow.notebook, &alloc );
+	ui_prefs.msgwindow_size = interface_prefs.msgwin_orientation == GTK_ORIENTATION_VERTICAL
+	? alloc.height
+	: alloc.width;
+	g_key_file_set_integer( config, PACKAGE, "msgwindow_size", ui_prefs.msgwindow_size );
 	g_key_file_set_boolean(config, PACKAGE, "fullscreen", ui_prefs.fullscreen);
 	g_key_file_set_boolean(config, PACKAGE, "symbols_group_by_type", ui_prefs.symbols_group_by_type);
 	g_key_file_set_string(config, PACKAGE, "color_picker_palette", ui_prefs.color_picker_palette);
@@ -1088,6 +1096,7 @@ static void load_ui_prefs(GKeyFile *config)
 {
 	ui_prefs.sidebar_visible = utils_get_setting_boolean(config, PACKAGE, "sidebar_visible", TRUE);
 	ui_prefs.msgwindow_visible = utils_get_setting_boolean(config, PACKAGE, "msgwindow_visible", TRUE);
+	ui_prefs.msgwindow_size = utils_get_setting_integer( config, PACKAGE, "msgwindow_size", 105 );
 	ui_prefs.fullscreen = utils_get_setting_boolean(config, PACKAGE, "fullscreen", FALSE);
 	ui_prefs.symbols_group_by_type = utils_get_setting_boolean(config, PACKAGE, "symbols_group_by_type", TRUE);
 	ui_prefs.custom_date_format = utils_get_setting_string(config, PACKAGE, "custom_date_format", "");

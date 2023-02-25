@@ -1023,27 +1023,9 @@ static void on_help_shortcuts1_activate(GtkMenuItem *menuitem, gpointer user_dat
 }
 
 
-static void on_website1_activate(GtkMenuItem *menuitem, gpointer user_data)
-{
-	utils_open_browser(GEANY_HOMEPAGE);
-}
-
-
-static void on_help_menu_item_donate_activate(GtkMenuItem *item, gpointer user_data)
-{
-	utils_open_browser(GEANY_DONATE);
-}
-
-
 static void on_help_menu_item_wiki_activate(GtkMenuItem *item, gpointer user_data)
 {
 	utils_open_browser(GEANY_WIKI);
-}
-
-
-static void on_help_menu_item_bug_report_activate(GtkMenuItem *item, gpointer user_data)
-{
-	utils_open_browser(GEANY_BUG_REPORT);
 }
 
 

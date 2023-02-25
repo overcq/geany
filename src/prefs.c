@@ -885,7 +885,11 @@ on_prefs_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
 			ui_swap_sidebar_pos();
 
 		widget = ui_lookup_widget(main_widgets.window, "vpaned1");
-		gtk_orientable_set_orientation(GTK_ORIENTABLE(widget), interface_prefs.msgwin_orientation);
+		gtk_orientable_set_orientation( GTK_ORIENTABLE(widget), interface_prefs.msgwin_orientation );
+		if( interface_prefs.msgwin_orientation == GTK_ORIENTATION_HORIZONTAL )
+			gtk_widget_set_size_request( msgwindow.notebook, -1, ui_prefs.msgwindow_size );
+		else
+			gtk_widget_set_size_request( msgwindow.notebook, ui_prefs.msgwindow_size, -1 );
 
 		/* General settings */
 		/* startup */

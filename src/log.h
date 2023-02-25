@@ -26,10 +26,8 @@
 
 G_BEGIN_DECLS
 
-void log_handlers_init(void);
-
-void log_finalize(void);
-
+void E_log_M(void);
+void E_log_W(void);
 void log_show_debug_messages_dialog(void);
 
 G_END_DECLS
