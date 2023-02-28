@@ -166,7 +166,6 @@ enum GeanyKeyBindingID
 	GEANY_KEYS_FORMAT_SENDTOCMD3,				/**< Keybinding. */
 	GEANY_KEYS_DOCUMENT_FOLDALL,				/**< Keybinding. */
 	GEANY_KEYS_FORMAT_SENDTOVTE,				/**< Keybinding. */
-	GEANY_KEYS_PROJECT_PROPERTIES,				/**< Keybinding. */
 	GEANY_KEYS_DOCUMENT_LINEWRAP,				/**< Keybinding. */
 	GEANY_KEYS_EDITOR_MACROLIST,				/**< Keybinding.
 												 * @deprecated 1.25, it doesn't do anything anymore */
@@ -258,9 +257,8 @@ enum GeanyKeyBindingID
 	GEANY_KEYS_INSERT_LINEAFTER,				/**< Keybinding. */
 	GEANY_KEYS_INSERT_LINEBEFORE,				/**< Keybinding. */
 	GEANY_KEYS_DOCUMENT_REMOVE_MARKERS_INDICATORS,	/**< Keybinding. */
-	GEANY_KEYS_PROJECT_OPEN,					/**< Keybinding. */
-	GEANY_KEYS_PROJECT_NEW,						/**< Keybinding. */
-	GEANY_KEYS_PROJECT_CLOSE,					/**< Keybinding. */
+	GEANY_KEYS_PROJECT_OPEN_DIRECTORY,					/**< Keybinding. */
+	GEANY_KEYS_PROJECT_OPEN_OR_CREATE_AUTOOPEN_TEXT,						/**< Keybinding. */
 	GEANY_KEYS_FORMAT_JOINLINES,				/**< Keybinding. */
 	GEANY_KEYS_GOTO_LINESTARTVISUAL,			/**< Keybinding. */
 	GEANY_KEYS_DOCUMENT_CLONE,					/**< Keybinding. */
@@ -277,8 +275,6 @@ enum GeanyKeyBindingID
 												 * @since 1.34 (API 238) */
 	GEANY_KEYS_FILE_RELOAD_ALL,					/**< Keybinding.
 												 * @since 1.38 (API 240) */
-	GEANY_KEYS_PROJECT_NEW_FROM_FOLDER,			/**< Keybinding.
-												 * @since 1.39 (API 243) */
 	GEANY_KEYS_COUNT	/* must not be used by plugins */
 };
 

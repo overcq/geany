@@ -1367,51 +1367,15 @@ void on_previous_message1_activate(GtkMenuItem *menuitem, gpointer user_data)
 }
 
 
-void on_project_new1_activate(GtkMenuItem *menuitem, gpointer user_data)
+void on_project_open_directory(GtkMenuItem *menuitem, gpointer user_data)
 {
-	project_new(FALSE);
+	E_project_I_open_directory();
 }
 
 
-void on_project_new_from_folder1_activate(GtkMenuItem *menuitem, gpointer user_data)
+void on_project_open_or_create_autoopen_text_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
-	project_new(TRUE);
-}
-
-
-void on_project_open1_activate(GtkMenuItem *menuitem, gpointer user_data)
-{
-	project_open();
-}
-
-
-void on_project_close1_activate(GtkMenuItem *menuitem, gpointer user_data)
-{
-	project_close(TRUE);
-}
-
-
-void on_project_properties1_activate(GtkMenuItem *menuitem, gpointer user_data)
-{
-	project_properties();
-}
-
-
-static void on_menu_project1_activate(GtkMenuItem *menuitem, gpointer user_data)
-{
-	static GtkWidget *item_close = NULL;
-	static GtkWidget *item_properties = NULL;
-
-	if (item_close == NULL)
-	{
-		item_close = ui_lookup_widget(main_widgets.window, "project_close1");
-		item_properties = ui_lookup_widget(main_widgets.window, "project_properties1");
-	}
-
-	gtk_widget_set_sensitive(item_close, (app->project != NULL));
-	gtk_widget_set_sensitive(item_properties, (app->project != NULL));
-	gtk_widget_set_sensitive(ui_widgets.recent_projects_menuitem,
-						g_queue_get_length(ui_prefs.recent_projects_queue) > 0);
+	E_project_I_open_or_create_autoopen_text();
 }
 
 
@@ -1449,14 +1413,6 @@ void on_menu_open_selected_file1_activate(GtkMenuItem *menuitem, gpointer user_d
 
 			filename = g_build_path(G_DIR_SEPARATOR_S, path, sel, NULL);
 
-			if (! g_file_test(filename, G_FILE_TEST_EXISTS) &&
-				app->project != NULL && !EMPTY(app->project->base_path))
-			{
-				/* try the project's base path */
-				SETPTR(path, project_get_base_path());
-				SETPTR(path, utils_get_locale_from_utf8(path));
-				SETPTR(filename, g_build_path(G_DIR_SEPARATOR_S, path, sel, NULL));
-			}
 			g_free(path);
 #ifdef G_OS_UNIX
 			if (! g_file_test(filename, G_FILE_TEST_EXISTS))

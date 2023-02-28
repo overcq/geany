@@ -402,16 +402,10 @@ static void prefs_init_dialog(void)
 	/* Synchronize with Stash settings */
 	prefs_action(PREF_DISPLAY);
 
-	widget = ui_lookup_widget(ui_widgets.prefs_dialog, "label_project_indent_warning");
-	ui_widget_show_hide(widget, app->project != NULL);
-
 	/* General settings */
 	/* startup */
 	widget = ui_lookup_widget(ui_widgets.prefs_dialog, "check_load_session");
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widget), prefs.load_session);
-
-	widget = ui_lookup_widget(ui_widgets.prefs_dialog, "check_project_file_in_basedir");
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widget), project_prefs.project_file_in_basedir);
 
 	widget = ui_lookup_widget(ui_widgets.prefs_dialog, "check_save_win_pos");
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widget), prefs.save_winpos);
@@ -437,8 +431,6 @@ static void prefs_init_dialog(void)
 
 	widget = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_contextaction");
 	gtk_entry_set_text(GTK_ENTRY(widget), tool_prefs.context_action_cmd);
-
-	project_setup_prefs();	/* project files path */
 
 
 	/* Interface settings */
@@ -896,9 +888,6 @@ on_prefs_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
 		widget = ui_lookup_widget(ui_widgets.prefs_dialog, "check_load_session");
 		prefs.load_session = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
 
-		widget = ui_lookup_widget(ui_widgets.prefs_dialog, "check_project_file_in_basedir");
-		project_prefs.project_file_in_basedir = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
-
 		widget = ui_lookup_widget(ui_widgets.prefs_dialog, "check_save_win_pos");
 		prefs.save_winpos = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
 
@@ -924,8 +913,6 @@ on_prefs_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
 		widget = ui_lookup_widget(ui_widgets.prefs_dialog, "entry_contextaction");
 		g_free(tool_prefs.context_action_cmd);
 		tool_prefs.context_action_cmd = g_strdup(gtk_entry_get_text(GTK_ENTRY(widget)));
-
-		project_apply_prefs();	/* project file path */
 
 
 		/* Interface settings */
@@ -1723,19 +1710,10 @@ void prefs_show_dialog(void)
 		gtk_widget_show(label);
 		gtk_box_pack_start(GTK_BOX(ui_lookup_widget(ui_widgets.prefs_dialog, "vbox32")),
 			label, FALSE, TRUE, 5);
-		/* page Editor->Indentation */
-		label = geany_wrap_label_new(_("<i>Warning: these settings are overridden by the current project. See <b>Project->Properties</b>.</i>"));
-		gtk_widget_show(label);
-		gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
-		gtk_misc_set_padding(GTK_MISC(label), 6, 0);
-		gtk_box_pack_start(GTK_BOX(ui_lookup_widget(ui_widgets.prefs_dialog,
-			"label_project_indent_warning")), label, FALSE, TRUE, 5);
-
 		/* add the clear icon to GtkEntry widgets in the dialog */
 		{
 			const gchar *names[] = {
 				"startup_path_entry",
-				"project_file_path_entry",
 				"extra_plugin_path_entry",
 				"entry_toggle_mark",
 			/*	"entry_com_make", */

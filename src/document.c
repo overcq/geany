@@ -44,7 +44,6 @@
 #include "msgwindow.h"
 #include "navqueue.h"
 #include "notebook.h"
-#include "project.h"
 #include "sciwrappers.h"
 #include "sidebar.h"
 #include "support.h"
@@ -2089,20 +2088,6 @@ gboolean document_save_file(GeanyDocument *doc, gboolean force)
 	document_check_disk_status(doc, TRUE);
 	if (doc->priv->protected)
 		return save_file_handle_infobars(doc, force);
-
-	fp = project_get_file_prefs();
-	/* replaces tabs with spaces but only if the current file is not a Makefile */
-	if (fp->replace_tabs && doc->file_type->id != GEANY_FILETYPES_MAKE)
-		editor_replace_tabs(doc->editor, TRUE);
-	/* strip trailing spaces */
-	if (fp->strip_trailing_spaces)
-		editor_strip_trailing_spaces(doc->editor, TRUE);
-	/* ensure the file has a newline at the end */
-	if (fp->final_new_line)
-		editor_ensure_final_newline(doc->editor);
-	/* ensure newlines are consistent */
-	if (fp->ensure_convert_new_lines)
-		sci_convert_eols(doc->editor->sci, sci_get_eol_mode(doc->editor->sci));
 
 	/* notify plugins which may wish to modify the document before it's saved */
 	g_signal_emit_by_name(geany_object, "document-before-save", doc);

@@ -47,7 +47,6 @@
 #include "keybindings.h"
 #include "main.h"
 #include "prefs.h"
-#include "projectprivate.h"
 #include "sciwrappers.h"
 #include "support.h"
 #include "symbols.h"
@@ -367,17 +366,6 @@ static gboolean is_style_php(gint style)
 
 static gint editor_get_long_line_type(void)
 {
-	if (app->project)
-		switch (app->project->priv->long_line_behaviour)
-		{
-			case 0: /* marker disabled */
-				return 2;
-			case 1: /* use global settings */
-				break;
-			case 2: /* custom (enabled) */
-				return editor_prefs.long_line_type;
-		}
-
 	if (!editor_prefs.long_line_enabled)
 		return 2;
 	else
@@ -387,15 +375,9 @@ static gint editor_get_long_line_type(void)
 
 static gint editor_get_long_line_column(void)
 {
-	if (app->project && app->project->priv->long_line_behaviour != 1 /* use global settings */)
-		return app->project->priv->long_line_column;
-	else
-		return editor_prefs.long_line_column;
+	return editor_prefs.long_line_column;
 }
 
-
-#define get_project_pref(id)\
-	(app->project ? app->project->priv->id : editor_prefs.id)
 
 static const GeanyEditorPrefs *
 get_default_prefs(void)
@@ -404,20 +386,19 @@ get_default_prefs(void)
 
 	eprefs = editor_prefs;
 
-	/* project overrides */
 	eprefs.indentation = (GeanyIndentPrefs*)editor_get_indent_prefs(NULL);
 	eprefs.long_line_type = editor_get_long_line_type();
 	eprefs.long_line_column = editor_get_long_line_column();
-	eprefs.line_wrapping = get_project_pref(line_wrapping);
-	eprefs.line_break_column = get_project_pref(line_break_column);
-	eprefs.auto_continue_multiline = get_project_pref(auto_continue_multiline);
+	eprefs.line_wrapping = editor_prefs.line_wrapping;
+	eprefs.line_break_column = editor_prefs.line_break_column;
+	eprefs.auto_continue_multiline = editor_prefs.auto_continue_multiline;
 	return &eprefs;
 }
 
 
 /* Gets the prefs for the editor.
- * Prefs can be different according to project or document.
- * @warning Always get a fresh result instead of keeping a pointer to it if the editor/project
+ * Prefs can be different according to document.
+ * @warning Always get a fresh result instead of keeping a pointer to it if the editor
  * settings may have changed, or if this function has been called for a different editor.
  * @param editor The editor, or @c NULL to get the default prefs.
  * @return The prefs. */
@@ -549,11 +530,11 @@ static void check_line_breaking(GeanyEditor *editor, gint pos)
 	lstart = sci_get_position_from_line(sci, line);
 
 	/* use column instead of position which might be different with multibyte characters */
-	if (col < get_project_pref(line_break_column))
+	if( col < editor_prefs.line_break_column )
 		return;
 
 	/* look for the last space before line_break_column */
-	pos = sci_get_position_from_col(sci, line, get_project_pref(line_break_column));
+	pos = sci_get_position_from_col( sci, line, editor_prefs.line_break_column );
 
 	while (pos > lstart)
 	{
@@ -1249,14 +1230,14 @@ get_default_indent_prefs(void)
 {
 	static GeanyIndentPrefs iprefs;
 
-	iprefs = app->project ? *app->project->priv->indentation : *editor_prefs.indentation;
+	iprefs = *editor_prefs.indentation;
 	return &iprefs;
 }
 
 
 /** Gets the indentation prefs for the editor.
- * Prefs can be different according to project or document.
- * @warning Always get a fresh result instead of keeping a pointer to it if the editor/project
+ * Prefs can be different according to document.
+ * @warning Always get a fresh result instead of keeping a pointer to it if the editor
  * settings may have changed, or if this function has been called for a different editor.
  * @param editor @nullable The editor, or @c NULL to get the default indent prefs.
  * @return The indent prefs. */
@@ -1299,7 +1280,7 @@ static void on_new_line_added(GeanyEditor *editor)
 		insert_indent_after_line(editor, line - 1);
 	}
 
-	if (get_project_pref(auto_continue_multiline))
+	if( editor_prefs.auto_continue_multiline )
 	{	/* " * " auto completion in multiline C/C++/D/Java comments */
 		auto_multiline(editor, line);
 	}
@@ -5020,7 +5001,7 @@ GeanyEditor *editor_create(GeanyDocument *doc)
 	doc->editor = editor;	/* needed in case some editor functions/callbacks expect it */
 
 	editor->auto_indent = (iprefs->auto_indent_mode != GEANY_AUTOINDENT_NONE);
-	editor->line_wrapping = get_project_pref(line_wrapping);
+	editor->line_wrapping = editor_prefs.line_wrapping;
 	editor->scroll_percent = -1.0F;
 	editor->line_breaking = FALSE;
 

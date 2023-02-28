@@ -44,7 +44,6 @@
 #include "msgwindow.h"
 #include "prefs.h"
 #include "printing.h"
-#include "project.h"
 #include "sciwrappers.h"
 #include "sidebar.h"
 #include "socket.h"
@@ -520,7 +519,6 @@ static void save_dialog_prefs(GKeyFile *config)
 
 	/* general */
 	g_key_file_set_boolean(config, PACKAGE, "pref_main_load_session", prefs.load_session);
-	g_key_file_set_boolean(config, PACKAGE, "pref_main_project_file_in_basedir", project_prefs.project_file_in_basedir);
 	g_key_file_set_boolean(config, PACKAGE, "pref_main_save_winpos", prefs.save_winpos);
 	g_key_file_set_boolean(config, PACKAGE, "pref_main_save_wingeom", prefs.save_wingeom);
 	g_key_file_set_boolean(config, PACKAGE, "pref_main_confirm_exit", prefs.confirm_exit);
@@ -736,10 +734,8 @@ static void write_config_file(ConfigPayload payload)
 			break;
 		case SESSION:
 			save_recent_files(config, ui_prefs.recent_queue, "recent_files");
-			save_recent_files(config, ui_prefs.recent_projects_queue, "recent_projects");
-			project_save_prefs(config);	/* save project filename, etc. */
 			save_ui_session(config);
-			if (cl_options.load_session && app->project == NULL)
+			if( cl_options.load_session )
 				configuration_save_session_files(config);
 #ifdef HAVE_VTE
 			else if (vte_info.have_vte)
@@ -824,7 +820,6 @@ GPtrArray *configuration_load_session_files(GKeyFile *config)
 	}
 
 #ifdef HAVE_VTE
-	/* BUG: after loading project at startup, closing project doesn't restore old VTE path */
 	if (vte_info.have_vte)
 	{
 		gchar *tmp_string = utils_get_setting_string(config, "VTE", "last_dir", NULL);
@@ -878,7 +873,6 @@ static void load_dialog_prefs(GKeyFile *config)
 	prefs.confirm_exit = utils_get_setting_boolean(config, PACKAGE, "pref_main_confirm_exit", FALSE);
 	prefs.suppress_status_messages = utils_get_setting_boolean(config, PACKAGE, "pref_main_suppress_status_messages", FALSE);
 	prefs.load_session = utils_get_setting_boolean(config, PACKAGE, "pref_main_load_session", TRUE);
-	project_prefs.project_file_in_basedir = utils_get_setting_boolean(config, PACKAGE, "pref_main_project_file_in_basedir", TRUE);
 	prefs.save_winpos = utils_get_setting_boolean(config, PACKAGE, "pref_main_save_winpos", TRUE);
 	prefs.save_wingeom = utils_get_setting_boolean(config, PACKAGE, "pref_main_save_wingeom", prefs.save_winpos);
 	prefs.beep_on_errors = utils_get_setting_boolean(config, PACKAGE, "beep_on_errors", TRUE);
@@ -1268,10 +1262,8 @@ static gboolean read_config_file(ConfigPayload payload)
 			g_signal_emit_by_name(geany_object, "load-settings", config);
 			break;
 		case SESSION:
-			project_load_prefs(config);
 			load_ui_session(config);
 			load_recent_files(config, ui_prefs.recent_queue, "recent_files");
-			load_recent_files(config, ui_prefs.recent_projects_queue, "recent_projects");
 			break;
 		case MAX_PAYLOAD:
 			g_assert_not_reached();
@@ -1476,10 +1468,7 @@ void configuration_apply_settings(void)
 
 static gboolean save_configuration_cb(gpointer data)
 {
-	if (app->project != NULL)
-		project_write_config();
-	else
-		configuration_save_default_session();
+	configuration_save_default_session();
 	return G_SOURCE_REMOVE;
 }
 

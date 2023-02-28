@@ -142,15 +142,9 @@ void on_menu_toggle_line_commentation1_activate(GtkMenuItem *menuitem, gpointer 
 
 void on_next_message1_activate(GtkMenuItem *menuitem, gpointer user_data);
 
-void on_project_new1_activate(GtkMenuItem *menuitem, gpointer user_data);
+void on_project_open_directory(GtkMenuItem *menuitem, gpointer user_data);
 
-void on_project_new_from_folder1_activate(GtkMenuItem *menuitem, gpointer user_data);
-
-void on_project_open1_activate(GtkMenuItem *menuitem, gpointer user_data);
-
-void on_project_close1_activate(GtkMenuItem *menuitem, gpointer user_data);
-
-void on_project_properties1_activate(GtkMenuItem *menuitem, gpointer user_data);
+void on_project_open_or_create_autoopen_text_activate(GtkMenuItem *menuitem, gpointer user_data);
 
 void on_menu_open_selected_file1_activate(GtkMenuItem *menuitem, gpointer user_data);
 

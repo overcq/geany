@@ -153,8 +153,6 @@ void templates_replace_common(GString *tmpl, const gchar *fname,
 
 	templates_replace_valist(tmpl,
 		"{filename}", shortname,
-		"{project}", app->project ? app->project->name : "",
-		"{description}", app->project ? app->project->description : "",
 		NULL);
 	g_free(shortname);
 

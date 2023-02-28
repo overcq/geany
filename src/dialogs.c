@@ -167,9 +167,6 @@ static gboolean open_file_dialog_handle_response(GtkWidget *dialog, gint respons
 		}
 		g_slist_free(filelist);
 	}
-	if (app->project && !EMPTY(app->project->base_path))
-		gtk_file_chooser_remove_shortcut_folder(GTK_FILE_CHOOSER(dialog),
-			app->project->base_path, NULL);
 	return ret;
 }
 
@@ -454,7 +451,7 @@ void dialogs_show_open_file(void)
 	/* set dialog directory to the current file's directory, if present */
 	initdir = utils_get_current_file_dir_utf8();
 
-	/* use project or default startup directory (if set) if no files are open */
+	/* use default startup directory (if set) if no files are open */
 	/** TODO should it only be used when initially open the dialog and not on every show? */
 	if (! initdir)
 		initdir = g_strdup(utils_get_default_dir_utf8());
@@ -466,10 +463,6 @@ void dialogs_show_open_file(void)
 
 	if (initdir != NULL && g_path_is_absolute(initdir))
 			gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), initdir);
-
-	if (app->project && !EMPTY(app->project->base_path))
-		gtk_file_chooser_add_shortcut_folder(GTK_FILE_CHOOSER(dialog),
-				app->project->base_path, NULL);
 
 	while (!open_file_dialog_handle_response(dialog,
 		gtk_dialog_run(GTK_DIALOG(dialog))));
@@ -577,7 +570,7 @@ static GtkWidget *create_save_file_dialog(GeanyDocument *doc)
 	gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(dialog), TRUE);
 	gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), FALSE);
 
-	/* set the folder by default to the project base dir or the global pref for opening files */
+	/* set the folder by default to  the global pref for opening files */
 	initdir = utils_get_default_dir_utf8();
 	if (initdir)
 	{
@@ -631,20 +624,12 @@ static gboolean show_save_as_gtk(GeanyDocument *doc)
 		g_free(fname);
 	}
 
-	if (app->project && !EMPTY(app->project->base_path))
-		gtk_file_chooser_add_shortcut_folder(GTK_FILE_CHOOSER(dialog),
-			app->project->base_path, NULL);
-
 	/* Run the dialog synchronously, pausing this function call */
 	do
 	{
 		resp = gtk_dialog_run(GTK_DIALOG(dialog));
 	}
 	while (! save_as_dialog_handle_response(doc, dialog, resp));
-
-	if (app->project && !EMPTY(app->project->base_path))
-		gtk_file_chooser_remove_shortcut_folder(GTK_FILE_CHOOSER(dialog),
-			app->project->base_path, NULL);
 
 	gtk_widget_destroy(dialog);
 

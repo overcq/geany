@@ -46,7 +46,6 @@
 #include "navqueue.h"
 #include "notebook.h"
 #include "plugins.h"
-#include "projectprivate.h"
 #include "prefs.h"
 #include "printing.h"
 #include "sidebar.h"
@@ -254,7 +253,6 @@ static void main_init(void)
 	ui_init_builder();
 
 	main_widgets.window = NULL;
-	app->project = NULL;
 	ui_widgets.open_fontsel = NULL;
 	ui_widgets.open_colorsel = NULL;
 	ui_widgets.prefs_dialog = NULL;
@@ -264,17 +262,10 @@ static void main_init(void)
 	main_status.quitting = FALSE;
 	ignore_callback	= FALSE;
 	ui_prefs.recent_queue = g_queue_new();
-	ui_prefs.recent_projects_queue = g_queue_new();
 	main_status.opening_session_files = 0;
 
 	main_widgets.window = create_window1();
 	g_signal_connect(main_widgets.window, "notify::is-active", G_CALLBACK(on_window_active_changed), NULL);
-
-	/* add recent projects to the Project menu */
-	ui_widgets.recent_projects_menuitem = ui_lookup_widget(main_widgets.window, "recent_projects1");
-	ui_widgets.recent_projects_menu_menubar = gtk_menu_new();
-	gtk_menu_item_set_submenu(GTK_MENU_ITEM(ui_widgets.recent_projects_menuitem),
-							ui_widgets.recent_projects_menu_menubar);
 
 	/* store important pointers for later reference */
 	main_widgets.toolbar = toolbar_init();
@@ -839,22 +830,6 @@ static void open_cl_files(gint argc, gchar **argv)
 }
 
 
-static void load_session_project_file(void)
-{
-	gchar *locale_filename;
-
-	g_return_if_fail(project_prefs.session_file != NULL);
-
-	locale_filename = utils_get_locale_from_utf8(project_prefs.session_file);
-
-	if (G_LIKELY(!EMPTY(locale_filename)))
-		project_load_file(locale_filename);
-
-	g_free(locale_filename);
-	g_free(project_prefs.session_file);	/* no longer needed */
-}
-
-
 static void load_settings(void)
 {
 #ifdef HAVE_VTE
@@ -874,37 +849,9 @@ static void load_settings(void)
 }
 
 
-void main_load_project_from_command_line(const gchar *locale_filename, gboolean use_session)
-{
-	gchar *pfile;
-
-	pfile = utils_get_path_from_uri(locale_filename);
-	if (pfile != NULL)
-	{
-		if (use_session)
-			project_load_file_with_session(pfile);
-		else
-			project_load_file(pfile);
-	}
-	g_free(pfile);
-}
-
-
 static void load_startup_files(gint argc, gchar **argv)
 {
 	gboolean load_session = FALSE;
-
-	if (argc > 1 && g_str_has_suffix(argv[1], ".geany"))
-	{
-		gchar *filename = main_get_argv_filename(argv[1]);
-
-		/* project file specified: load it, but decide the session later */
-		main_load_project_from_command_line(filename, FALSE);
-		argc--, argv++;
-		/* force session load if using project-based session files */
-		load_session = TRUE;
-		g_free(filename);
-	}
 
 	/* Load the default session if:
 	 * 1. "Load files from the last session" is active.
@@ -913,25 +860,14 @@ static void load_startup_files(gint argc, gchar **argv)
 	 * Has no effect if a CL project is loaded and using project-based session files. */
 	if (prefs.load_session && cl_options.load_session && !cl_options.new_instance)
 	{
-		if (app->project == NULL)
-			load_session_project_file();
-		if (app->project == NULL)
-			configuration_load_default_session();
+		configuration_load_default_session();
 		load_session = TRUE;
 	}
 
 	if (load_session)
 	{
 		/* load session files into tabs, as they are found in the session_files variable */
-		if (app->project != NULL)
-		{
-			configuration_open_files(app->project->priv->session_files);
-			app->project->priv->session_files = NULL;
-		}
-		else
-		{
-			configuration_open_default_session();
-		}
+		configuration_open_default_session();
 
 		if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(main_widgets.notebook)) == 0)
 		{
@@ -1091,7 +1027,6 @@ gint main_lib(gint argc, gchar **argv)
 	configuration_init();
 	ui_init_prefs();
 	search_init();
-	project_init();
 #ifdef HAVE_PLUGINS
 	plugins_init();
 #endif
@@ -1216,10 +1151,6 @@ static gboolean do_main_quit(void)
 {
 	configuration_save();
 
-	if( app->project
-	&& !project_close(FALSE)
-	)   /* save project session files */
-		return FALSE;
 	if( !document_close_all() )
 		return FALSE;
 
@@ -1245,7 +1176,6 @@ static gboolean do_main_quit(void)
 	build_finalize();
 	document_finalize();
 	symbols_finalize();
-	project_finalize();
 	editor_finalize();
 	editor_snippets_free();
 	encodings_finalize();
@@ -1284,7 +1214,6 @@ static gboolean do_main_quit(void)
 	g_strfreev(ui_prefs.custom_commands_labels);
 
 	queue_free(ui_prefs.recent_queue);
-	queue_free(ui_prefs.recent_projects_queue);
 
 	if (ui_widgets.prefs_dialog && GTK_IS_WIDGET(ui_widgets.prefs_dialog)) gtk_widget_destroy(ui_widgets.prefs_dialog);
 	if (ui_widgets.open_fontsel && GTK_IS_WIDGET(ui_widgets.open_fontsel)) gtk_widget_destroy(ui_widgets.open_fontsel);

@@ -40,7 +40,6 @@
 #include "keybindingsprivate.h"
 #include "msgwindow.h"
 #include "prefs.h"
-#include "projectprivate.h"
 #include "sciwrappers.h"
 #include "spawn.h"
 #include "support.h"
@@ -254,8 +253,6 @@ static GeanyBuildCommand *exec_pref = NULL;
 static GeanyBuildCommand *exec_def = NULL;
 /* and the regexen not in the filetype structure */
 static gchar *regex_pref = NULL;
-/* project non-fileregex string */
-static gchar *regex_proj = NULL;
 
 /* control if build commands are printed by get_build_cmd, for debug purposes only*/
 #ifndef PRINTBUILDCMDS
@@ -269,8 +266,7 @@ static void printfcmds(void)
 {
 #if 0
 	GeanyBuildCommand **cl[GEANY_GBG_COUNT][GEANY_BCS_COUNT] = {
-		/* GEANY_BCS_DEF, GEANY_BCS_FT, GEANY_BCS_HOME_FT, GEANY_BCS_PREF,
-		 * GEANY_BCS_FT_PROJ, GEANY_BCS_PROJ */
+		/* GEANY_BCS_DEF, GEANY_BCS_FT, GEANY_BCS_HOME_FT, GEANY_BCS_PREF */
 		{ &ft_def, NULL, NULL, NULL, NULL, NULL },
 		{ &non_ft_def, NULL, NULL, &non_ft_pref, NULL, &non_ft_proj },
 		{ &exec_def, NULL, NULL, &exec_pref, NULL, &exec_proj }
@@ -290,11 +286,9 @@ static void printfcmds(void)
 		printf("filetype %s\n",ft->name);
 		cl[GEANY_GBG_FT][GEANY_BCS_FT] = &(ft->priv->filecmds);
 		cl[GEANY_GBG_FT][GEANY_BCS_HOME_FT] = &(ft->priv->homefilecmds);
-		cl[GEANY_GBG_FT][GEANY_BCS_PROJ] = &(ft->priv->projfilecmds);
 		cl[GEANY_GBG_NON_FT][GEANY_BCS_FT] = &(ft->priv->ftdefcmds);
 		cl[GEANY_GBG_EXEC][GEANY_BCS_FT] = &(ft->priv->execcmds);
 		cl[GEANY_GBG_EXEC][GEANY_BCS_HOME_FT] = &(ft->priv->homeexeccmds);
-		cl[GEANY_GBG_EXEC][GEANY_BCS_PROJ_FT] = &(ft->priv->projexeccmds);
 	}
 	for (i = 0; i < GEANY_BCS_COUNT; ++i)
 	{
@@ -395,21 +389,17 @@ static GeanyBuildCommand *get_next_build_cmd(GeanyDocument *doc, guint cmdgrp, g
 		case GEANY_GBG_FT: /* order proj ft, home ft, ft, defft */
 			if (ft != NULL)
 			{
-				return_ft_cmd_if(GEANY_BCS_PROJ, projfilecmds);
 				return_ft_cmd_if(GEANY_BCS_PREF, homefilecmds);
 				return_ft_cmd_if(GEANY_BCS_FT, filecmds);
 			}
 			return_cmd_if(GEANY_BCS_DEF, ft_def);
 			break;
 		case GEANY_GBG_NON_FT: /* order proj, pref, def */
-			return_cmd_if(GEANY_BCS_PROJ, non_ft_proj);
 			return_cmd_if(GEANY_BCS_PREF, non_ft_pref);
 			return_ft_cmd_if(GEANY_BCS_FT, ftdefcmds);
 			return_cmd_if(GEANY_BCS_DEF, non_ft_def);
 			break;
 		case GEANY_GBG_EXEC: /* order proj, proj ft, pref, home ft, ft, def */
-			return_cmd_if(GEANY_BCS_PROJ, exec_proj);
-			return_ft_cmd_if(GEANY_BCS_PROJ_FT, projexeccmds);
 			return_cmd_if(GEANY_BCS_PREF, exec_pref);
 			return_ft_cmd_if(GEANY_BCS_FT, homeexeccmds);
 			return_ft_cmd_if(GEANY_BCS_FT, execcmds);
@@ -451,13 +441,11 @@ gchar **build_get_regex(GeanyBuildGroup grp, GeanyFiletype *ft, guint *from)
 		}
 		if (ft == NULL)
 			return NULL;
-		return_nonblank_regex(GEANY_BCS_PROJ, ft->priv->projerror_regex_string);
 		return_nonblank_regex(GEANY_BCS_HOME_FT, ft->priv->homeerror_regex_string);
 		return_nonblank_regex(GEANY_BCS_FT, ft->error_regex_string);
 	}
 	else if (grp == GEANY_GBG_NON_FT)
 	{
-		return_nonblank_regex(GEANY_BCS_PROJ, regex_proj);
 		return_nonblank_regex(GEANY_BCS_PREF, regex_pref);
 	}
 	return NULL;
@@ -482,7 +470,6 @@ static GeanyBuildCommand **get_build_group_pointer(const GeanyBuildSource src, c
 				case GEANY_BCS_FT:	  return &(ft->priv->filecmds);
 				case GEANY_BCS_HOME_FT: return &(ft->priv->homefilecmds);
 				case GEANY_BCS_PREF:	return &(ft->priv->homefilecmds);
-				case GEANY_BCS_PROJ:	return &(ft->priv->projfilecmds);
 				default: return NULL;
 			}
 			break;
@@ -491,7 +478,6 @@ static GeanyBuildCommand **get_build_group_pointer(const GeanyBuildSource src, c
 			{
 				case GEANY_BCS_DEF:	 return &(non_ft_def);
 				case GEANY_BCS_PREF:	return &(non_ft_pref);
-				case GEANY_BCS_PROJ:	return &(non_ft_proj);
 				default: return NULL;
 			}
 			break;
@@ -503,9 +489,7 @@ static GeanyBuildCommand **get_build_group_pointer(const GeanyBuildSource src, c
 				case GEANY_BCS_DEF:	 return &(exec_def);
 				case GEANY_BCS_FT:	  return ft ? &(ft->priv->execcmds): NULL;
 				case GEANY_BCS_HOME_FT: return ft ? &(ft->priv->homeexeccmds): NULL;
-				case GEANY_BCS_PROJ_FT: return ft ? &(ft->priv->projexeccmds): NULL;
 				case GEANY_BCS_PREF:	return &(exec_pref);
-				case GEANY_BCS_PROJ:	return &(exec_proj);
 				default: return NULL;
 			}
 			break;
@@ -717,10 +701,10 @@ static gchar *build_replace_placeholder(const GeanyDocument *doc, const gchar *s
 	gchar *executable = NULL;
 	gint line_num;
 
-	g_return_val_if_fail(doc == NULL || doc->is_valid, NULL);
+	g_return_val_if_fail( doc->is_valid, NULL );
 
 	stack = g_string_new(src);
-	if (doc != NULL && doc->file_name != NULL)
+	if( doc->file_name )
 	{
 		/* replace %f with the filename (including extension) */
 		replacement = g_path_get_basename(doc->file_name);
@@ -745,21 +729,6 @@ static gchar *build_replace_placeholder(const GeanyDocument *doc, const gchar *s
 		g_free(replacement);
 	}
 
-	/* replace %p with the current project's (absolute) base directory */
-	replacement = NULL; /* prevent double free if no replacement found */
-	if (app->project)
-	{
-		replacement = project_get_base_path();
-	}
-	else if (strstr(stack->str, "%p"))
-	{   /* fall back to %d */
-		ui_set_statusbar(FALSE, _("failed to substitute %%p, no project active"));
-		if (doc != NULL && doc->file_name != NULL)
-			replacement = g_path_get_dirname(doc->file_name);
-	}
-
-	utils_string_replace_all(stack, "%p", replacement);
-	g_free(replacement);
 	g_free(executable);
 
 	return g_string_free(stack, FALSE); /* don't forget to free src also if needed */
@@ -1627,11 +1596,7 @@ static void set_stop_button(gboolean stop)
 
 static void on_set_build_commands_activate(GtkWidget *w, gpointer u)
 {
-	/* For now, just show the project dialog */
-	if (app->project)
-		project_build_properties();
-	else
-		show_build_commands_dialog();
+	show_build_commands_dialog();
 }
 
 
@@ -2193,28 +2158,6 @@ static gboolean build_read_commands(BuildDestination *dst, BuildTableData table_
 }
 
 
-void build_read_project(GeanyFiletype *ft, BuildTableData build_properties)
-{
-	BuildDestination menu_dst;
-
-	if (ft != NULL)
-	{
-		menu_dst.dst[GEANY_GBG_FT] = &(ft->priv->projfilecmds);
-		menu_dst.fileregexstr = &(ft->priv->projerror_regex_string);
-	}
-	else
-	{
-		menu_dst.dst[GEANY_GBG_FT] = NULL;
-		menu_dst.fileregexstr = NULL;
-	}
-	menu_dst.dst[GEANY_GBG_NON_FT] = &non_ft_proj;
-	menu_dst.dst[GEANY_GBG_EXEC] = &exec_proj;
-	menu_dst.nonfileregexstr = &regex_proj;
-
-	build_read_commands(&menu_dst, build_properties, GTK_RESPONSE_ACCEPT);
-}
-
-
 static void show_build_commands_dialog(void)
 {
 	GtkWidget *dialog, *table, *vbox;
@@ -2356,7 +2299,6 @@ static void assign_cmd(GeanyBuildCommand *type, guint id,
 void build_load_menu(GKeyFile *config, GeanyBuildSource src, gpointer p)
 {
 	GeanyFiletype *ft;
-	GeanyProject *pj;
 	gchar **ftlist;
 	gchar *value, *basedir, *makebasedir;
 	gboolean bvalue = FALSE;
@@ -2388,37 +2330,6 @@ void build_load_menu(GKeyFile *config, GeanyBuildSource src, gpointer p)
 				build_load_menu_grp(config, &non_ft_pref, GEANY_GBG_NON_FT, NULL, FALSE);
 				build_load_menu_grp(config, &exec_pref, GEANY_GBG_EXEC, NULL, FALSE);
 				SETPTR(regex_pref, g_key_file_get_string(config, build_grp_name, "error_regex", NULL));
-				break;
-			case GEANY_BCS_PROJ:
-				build_load_menu_grp(config, &non_ft_proj, GEANY_GBG_NON_FT, NULL, FALSE);
-				build_load_menu_grp(config, &exec_proj, GEANY_GBG_EXEC, NULL, FALSE);
-				SETPTR(regex_proj, g_key_file_get_string(config, build_grp_name, "error_regex", NULL));
-				pj = (GeanyProject*)p;
-				if (p == NULL)
-					return;
-				ftlist = g_key_file_get_string_list(config, build_grp_name, "filetypes", NULL, NULL);
-				if (ftlist != NULL)
-				{
-					gchar **ftname;
-					if (pj->priv->build_filetypes_list == NULL)
-						pj->priv->build_filetypes_list = g_ptr_array_new();
-					g_ptr_array_set_size(pj->priv->build_filetypes_list, 0);
-					for (ftname = ftlist; *ftname != NULL; ++ftname)
-					{
-						ft = filetypes_lookup_by_name(*ftname);
-						if (ft != NULL)
-						{
-							gchar *regkey = g_strdup_printf("%serror_regex", *ftname);
-							g_ptr_array_add(pj->priv->build_filetypes_list, ft);
-							SETPTR(ft->priv->projerror_regex_string,
-									g_key_file_get_string(config, build_grp_name, regkey, NULL));
-							g_free(regkey);
-							build_load_menu_grp(config, &(ft->priv->projfilecmds), GEANY_GBG_FT, *ftname, FALSE);
-							build_load_menu_grp(config, &(ft->priv->projexeccmds), GEANY_GBG_EXEC, *ftname, FALSE);
-						}
-					}
-					g_free(ftlist);
-				}
 				break;
 			default: /* defaults don't load from config, see build_init */
 				break;
@@ -2454,40 +2365,6 @@ void build_load_menu(GKeyFile *config, GeanyBuildSource src, gpointer p)
 			}
 			if (ft->error_regex_string == NULL)
 				ft->error_regex_string = g_key_file_get_string(config, "build_settings", "error_regex", NULL);
-			break;
-		case GEANY_BCS_PROJ:
-			if (non_ft_pref == NULL)
-				non_ft_pref = g_new0(GeanyBuildCommand, build_groups_count[GEANY_GBG_NON_FT]);
-			basedir = project_get_base_path();
-			if (basedir == NULL)
-				basedir = g_strdup("%d");
-			bvalue = g_key_file_get_boolean(config, "project", "make_in_base_path", NULL);
-			if (bvalue)
-				makebasedir = g_strdup(basedir);
-			else
-				makebasedir = g_strdup("%d");
-			if (non_ft_pref[GBO_TO_CMD(GEANY_GBO_MAKE_ALL)].old)
-				SETPTR(non_ft_pref[GBO_TO_CMD(GEANY_GBO_MAKE_ALL)].working_dir, g_strdup(makebasedir));
-			if (non_ft_pref[GBO_TO_CMD(GEANY_GBO_CUSTOM)].old)
-				SETPTR(non_ft_pref[GBO_TO_CMD(GEANY_GBO_CUSTOM)].working_dir, g_strdup(makebasedir));
-			if (non_ft_pref[GBO_TO_CMD(GEANY_GBO_MAKE_OBJECT)].old)
-				SETPTR(non_ft_pref[GBO_TO_CMD(GEANY_GBO_MAKE_OBJECT)].working_dir, g_strdup("%d"));
-			value = g_key_file_get_string(config, "project", "run_cmd", NULL);
-			if (!EMPTY(value))
-			{
-				if (exec_proj == NULL)
-					exec_proj = g_new0(GeanyBuildCommand, build_groups_count[GEANY_GBG_EXEC]);
-				if (! exec_proj[GBO_TO_CMD(GEANY_GBO_EXEC)].exists)
-				{
-					exec_proj[GBO_TO_CMD(GEANY_GBO_EXEC)].exists = TRUE;
-					SETPTR(exec_proj[GBO_TO_CMD(GEANY_GBO_EXEC)].label, g_strdup(_("_Execute")));
-					SETPTR(exec_proj[GBO_TO_CMD(GEANY_GBO_EXEC)].command, value);
-					SETPTR(exec_proj[GBO_TO_CMD(GEANY_GBO_EXEC)].working_dir, g_strdup(basedir));
-					exec_proj[GBO_TO_CMD(GEANY_GBO_EXEC)].old = TRUE;
-				}
-			}
-			g_free(makebasedir);
-			g_free(basedir);
 			break;
 		case GEANY_BCS_PREF:
 			value = g_key_file_get_string(config, "tools", "make_cmd", NULL);
@@ -2553,30 +2430,10 @@ static guint build_save_menu_grp(GKeyFile *config, GeanyBuildCommand *src, gint 
 	return count;
 }
 
-
-static gboolean save_project_filetype(GeanyFiletype *ft, GKeyFile *config)
-{
-	guint i = 0;
-	gchar *regkey = g_strdup_printf("%serror_regex", ft->name);
-
-	i += build_save_menu_grp(config, ft->priv->projfilecmds, GEANY_GBG_FT, ft->name);
-	i += build_save_menu_grp(config, ft->priv->projexeccmds, GEANY_GBG_EXEC, ft->name);
-	if (!EMPTY(ft->priv->projerror_regex_string))
-	{
-		g_key_file_set_string(config, build_grp_name, regkey, ft->priv->projerror_regex_string);
-		i++;
-	}
-	else
-		g_key_file_remove_key(config, build_grp_name, regkey, NULL);
-	g_free(regkey);
-	return (i > 0);
-}
-
 /* TODO: untyped ptr is too ugly (also for build_load_menu) */
 void build_save_menu(GKeyFile *config, gpointer ptr, GeanyBuildSource src)
 {
 	GeanyFiletype *ft;
-	GeanyProject *pj;
 
 	switch (src)
 	{
@@ -2598,33 +2455,6 @@ void build_save_menu(GKeyFile *config, gpointer ptr, GeanyBuildSource src)
 				g_key_file_set_string(config, build_grp_name, "error_regex", regex_pref);
 			else
 				g_key_file_remove_key(config, build_grp_name, "error_regex", NULL);
-			break;
-		case GEANY_BCS_PROJ:
-			pj = (GeanyProject*)ptr;
-			build_save_menu_grp(config, non_ft_proj, GEANY_GBG_NON_FT, NULL);
-			build_save_menu_grp(config, exec_proj, GEANY_GBG_EXEC, NULL);
-			if (!EMPTY(regex_proj))
-				g_key_file_set_string(config, build_grp_name, "error_regex", regex_proj);
-			else
-				g_key_file_remove_key(config, build_grp_name, "error_regex", NULL);
-			if (pj->priv->build_filetypes_list != NULL)
-			{
-				GPtrArray *ft_names = g_ptr_array_new();
-				const GPtrArray *build_fts = pj->priv->build_filetypes_list;
-				
-				for (guint i = 0; i < build_fts->len; i++)
-				{
-					ft = build_fts->pdata[i];
-					if (save_project_filetype(ft, config))
-						g_ptr_array_add(ft_names, ft->name);
-				}
-				if (ft_names->pdata != NULL)
-					g_key_file_set_string_list(config, build_grp_name, "filetypes",
-						(const gchar**)ft_names->pdata, ft_names->len);
-				else
-					g_key_file_remove_key(config, build_grp_name, "filetypes", NULL);
-				g_ptr_array_free(ft_names, TRUE);
-			}
 			break;
 		default: /* defaults and GEANY_BCS_FT can't save */
 			break;
@@ -2664,13 +2494,6 @@ guint build_get_group_count(const GeanyBuildGroup grp)
 }
 
 
-static void on_project_close(void)
-{
-	/* remove project regexen */
-	SETPTR(regex_proj, NULL);
-}
-
-
 static struct
 {
 	const gchar *label;
@@ -2692,8 +2515,6 @@ void build_init(void)
 	GtkWidget *item;
 	GtkWidget *toolmenu;
 	gint cmdindex;
-
-	g_signal_connect(geany_object, "project-close", on_project_close, NULL);
 
 	ft_def = g_new0(GeanyBuildCommand, build_groups_count[GEANY_GBG_FT]);
 	non_ft_def = g_new0(GeanyBuildCommand, build_groups_count[GEANY_GBG_NON_FT]);

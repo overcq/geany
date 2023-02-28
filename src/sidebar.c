@@ -469,59 +469,23 @@ static gboolean utils_filename_has_prefix(const gchar *str, const gchar *prefix)
 }
 
 
-static gchar *get_project_folder(const gchar *path)
-{
-	gchar *project_base_path;
-	gchar *dirname = NULL;
-	const gchar *rest;
-
-	/* replace the project base path with the project name */
-	project_base_path = project_get_base_path();
-
-	if (project_base_path != NULL)
-	{
-		gsize len = strlen(project_base_path);
-
-		/* remove trailing separator so we can match base path exactly */
-		if (project_base_path[len-1] == G_DIR_SEPARATOR)
-			project_base_path[--len] = '\0';
-
-		/* check whether the dir name matches or uses the project base path */
-		if (utils_filename_has_prefix(path, project_base_path))
-		{
-			rest = path + len;
-			if (*rest == G_DIR_SEPARATOR || *rest == '\0')
-			{
-				dirname = g_strdup_printf("%s%s", app->project->name, rest);
-			}
-		}
-		g_free(project_base_path);
-	}
-
-	return dirname;
-}
-
-
 static gchar *get_doc_folder(const gchar *path)
 {
-	gchar *dirname = get_project_folder(path);
+	gchar *dirname;
 	const gchar *rest;
 
-	if (dirname == NULL)
-	{
-		const gchar *home_dir = g_get_home_dir();
-		gchar *tmp_dirname = g_strdup(path);
+	const gchar *home_dir = g_get_home_dir();
+	gchar *tmp_dirname = g_strdup(path);
 
-		dirname = tmp_dirname;
-		/* If matches home dir, replace with tilde */
-		if (!EMPTY(home_dir) && utils_filename_has_prefix(dirname, home_dir))
+	dirname = tmp_dirname;
+	/* If matches home dir, replace with tilde */
+	if (!EMPTY(home_dir) && utils_filename_has_prefix(dirname, home_dir))
+	{
+		rest = dirname + strlen(home_dir);
+		if (*rest == G_DIR_SEPARATOR || *rest == '\0')
 		{
-			rest = dirname + strlen(home_dir);
-			if (*rest == G_DIR_SEPARATOR || *rest == '\0')
-			{
-				dirname = g_strdup_printf("~%s", rest);
-				g_free(tmp_dirname);
-			}
+			dirname = g_strdup_printf("~%s", rest);
+			g_free(tmp_dirname);
 		}
 	}
 
@@ -1534,8 +1498,7 @@ static void documents_menu_update(GtkTreeSelection *selection)
 		                   -1);
 	}
 	path = !EMPTY(shortname) &&
-		(g_path_is_absolute(shortname) ||
-		(app->project && g_str_has_prefix(shortname, app->project->name)));
+		g_path_is_absolute(shortname);
 
 	/* can close all, save all (except shortname), but only reload individually ATM */
 	gtk_widget_set_sensitive(doc_items.close, sel);

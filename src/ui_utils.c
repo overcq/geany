@@ -40,7 +40,6 @@
 #include "main.h"
 #include "msgwindow.h"
 #include "prefs.h"
-#include "project.h"
 #include "sciwrappers.h"
 #include "sidebar.h"
 #include "stash.h"
@@ -79,7 +78,6 @@ static GtkWidget* window1 = NULL;
 static GtkWidget* toolbar_popup_menu1 = NULL;
 static GtkWidget* edit_menu1 = NULL;
 static GtkWidget* prefs_dialog = NULL;
-static GtkWidget* project_dialog = NULL;
 
 static struct
 {
@@ -116,7 +114,6 @@ typedef struct
 static void update_recent_menu(GeanyRecentFiles *grf);
 static void recent_file_loaded(const gchar *utf8_filename, GeanyRecentFiles *grf);
 static void recent_file_activate_cb(GtkMenuItem *menuitem, gpointer user_data);
-static void recent_project_activate_cb(GtkMenuItem *menuitem, gpointer user_data);
 static GtkWidget *progress_bar_create(void);
 static void ui_menu_sort_by_label(GtkMenu *menu);
 
@@ -366,7 +363,6 @@ void ui_update_statusbar(GeanyDocument *doc, gint pos)
 void ui_set_window_title(GeanyDocument *doc)
 {
 	GString *str;
-	GeanyProject *project = app->project;
 
 	g_return_if_fail(doc == NULL || doc->is_valid);
 
@@ -393,12 +389,6 @@ void ui_set_window_title(GeanyDocument *doc)
 			g_free(dirname);
 		}
 		g_string_append(str, " - ");
-	}
-	if (project)
-	{
-		g_string_append_c(str, '[');
-		g_string_append(str, project->name);
-		g_string_append(str, "] - ");
 	}
 	g_string_append(str, "Geany");
 	if (cl_options.new_instance)
@@ -1150,25 +1140,9 @@ static GeanyRecentFiles *recent_get_recent_files(void)
 }
 
 
-static GeanyRecentFiles *recent_get_recent_projects(void)
-{
-	static GeanyRecentFiles grf = { RECENT_FILE_PROJECT, NULL, NULL, NULL, NULL };
-
-	if (G_UNLIKELY(grf.recent_queue == NULL))
-	{
-		grf.recent_queue = ui_prefs.recent_projects_queue;
-		grf.menubar = ui_widgets.recent_projects_menu_menubar;
-		grf.toolbar = NULL;
-		grf.activate_cb = recent_project_activate_cb;
-	}
-	return &grf;
-}
-
-
 void ui_create_recent_menus(void)
 {
 	recent_create_menu(recent_get_recent_files());
-	recent_create_menu(recent_get_recent_projects());
 }
 
 
@@ -1179,20 +1153,6 @@ static void recent_file_activate_cb(GtkMenuItem *menuitem, G_GNUC_UNUSED gpointe
 
 	if (document_open_file(locale_filename, FALSE, NULL, NULL) != NULL)
 		recent_file_loaded(utf8_filename, recent_get_recent_files());
-
-	g_free(locale_filename);
-	g_free(utf8_filename);
-}
-
-
-static void recent_project_activate_cb(GtkMenuItem *menuitem, G_GNUC_UNUSED gpointer user_data)
-{
-	gchar *utf8_filename = ui_menu_item_get_text(menuitem);
-	gchar *locale_filename = utils_get_locale_from_utf8(utf8_filename);
-
-	if (app->project && !project_close(FALSE)) {}
-	else if (project_load_file_with_session(locale_filename))
-		recent_file_loaded(utf8_filename, recent_get_recent_projects());
 
 	g_free(locale_filename);
 	g_free(utf8_filename);
@@ -1254,12 +1214,6 @@ void ui_add_recent_document(GeanyDocument *doc)
 }
 
 
-void ui_add_recent_project_file(const gchar *utf8_filename)
-{
-	add_recent_file(utf8_filename, recent_get_recent_projects(), NULL);
-}
-
-
 /* Returns: newly allocated string with the UTF-8 menu text. */
 gchar *ui_menu_item_get_text(GtkMenuItem *menu_item)
 {
@@ -1289,29 +1243,6 @@ static gint find_recent_file_item(gconstpointer list_data, gconstpointer user_da
 
 	g_free(menu_text);
 	return result;
-}
-
-
-/* update the project menu item's sensitivity */
-void ui_update_recent_project_menu(void)
-{
-	GeanyRecentFiles *grf = recent_get_recent_projects();
-	GList *children, *item;
-
-	/* only need to update the menubar menu, the project doesn't have a toolbar item */
-	children = gtk_container_get_children(GTK_CONTAINER(grf->menubar));
-	for (item = children; item; item = item->next)
-	{
-		gboolean sensitive = TRUE;
-
-		if (app->project)
-		{
-			const gchar *filename = gtk_menu_item_get_label(item->data);
-			sensitive = g_strcmp0(app->project->file_name, filename) != 0;
-		}
-		gtk_widget_set_sensitive(item->data, sensitive);
-	}
-	g_list_free(children);
 }
 
 
@@ -1376,9 +1307,6 @@ static void recent_file_loaded(const gchar *utf8_filename, GeanyRecentFiles *grf
 			add_recent_file_menu_item(utf8_filename, grf, parents[i]);
 		g_list_free(children);
 	}
-
-	if (grf->type == RECENT_FILE_PROJECT)
-		ui_update_recent_project_menu();
 }
 
 
@@ -1414,9 +1342,6 @@ static void update_recent_menu(GeanyRecentFiles *grf)
 		/* create the new item */
 		add_recent_file_menu_item(filename, grf, parents[i]);
 	}
-
-	if (grf->type == RECENT_FILE_PROJECT)
-		ui_update_recent_project_menu();
 }
 
 
@@ -1999,21 +1924,6 @@ static gchar *run_file_chooser(const gchar *title, GtkFileChooserAction action,
 #endif
 
 
-gchar *ui_get_project_directory(const gchar *path)
-{
-	gchar *utf8_path;
-	const gchar *title = _("Select Project Base Path");
-
-#ifdef G_OS_WIN32
-	utf8_path = win32_show_folder_dialog(ui_widgets.prefs_dialog, title, path);
-#else
-	utf8_path = run_file_chooser(title, GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, path);
-#endif
-
-	return utf8_path;
-}
-
-
 static void ui_path_box_open_clicked(GtkButton *button, gpointer user_data)
 {
 	GtkFileChooserAction action = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "action"));
@@ -2365,8 +2275,6 @@ void ui_init_prefs(void)
 		"msgwin_messages_visible", TRUE);
 	stash_group_add_boolean(group, &interface_prefs.msgwin_scribble_visible,
 		"msgwin_scribble_visible", TRUE);
-	stash_group_add_boolean(group, &interface_prefs.warn_on_project_close,
-		"warn_on_project_close", TRUE);
 	stash_group_add_spin_button_integer(group, &interface_prefs.tab_label_len,
 		"tab_label_length", 99999, "spin_tab_label_len");
 }
@@ -2403,12 +2311,6 @@ GtkWidget *create_edit_menu1(void)
 GtkWidget *create_prefs_dialog(void)
 {
 	return prefs_dialog;
-}
-
-
-GtkWidget *create_project_dialog(void)
-{
-	return project_dialog;
 }
 
 
@@ -2483,13 +2385,11 @@ void ui_init_builder(void)
 
 	edit_menu1 = GTK_WIDGET(gtk_builder_get_object(builder, "edit_menu1"));
 	prefs_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_dialog"));
-	project_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "project_dialog"));
 	toolbar_popup_menu1 = GTK_WIDGET(gtk_builder_get_object(builder, "toolbar_popup_menu1"));
 	window1 = GTK_WIDGET(gtk_builder_get_object(builder, "window1"));
 
 	g_object_set_data(G_OBJECT(edit_menu1), "edit_menu1", edit_menu1);
 	g_object_set_data(G_OBJECT(prefs_dialog), "prefs_dialog", prefs_dialog);
-	g_object_set_data(G_OBJECT(project_dialog), "project_dialog", project_dialog);
 	g_object_set_data(G_OBJECT(toolbar_popup_menu1), "toolbar_popup_menu1", toolbar_popup_menu1);
 	g_object_set_data(G_OBJECT(window1), "window1", window1);
 
@@ -2656,8 +2556,6 @@ void ui_finalize_builder(void)
 		gtk_widget_destroy(edit_menu1);
 	if (GTK_IS_WIDGET(prefs_dialog))
 		gtk_widget_destroy(prefs_dialog);
-	if (GTK_IS_WIDGET(project_dialog))
-		gtk_widget_destroy(project_dialog);
 	if (GTK_IS_WIDGET(toolbar_popup_menu1))
 		gtk_widget_destroy(toolbar_popup_menu1);
 	if (GTK_IS_WIDGET(window1))

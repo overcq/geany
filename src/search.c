@@ -803,18 +803,7 @@ static void update_file_patterns(GtkWidget *mode_combo, GtkWidget *fcombo)
 	}
 	else if (selection == FILES_MODE_PROJECT)
 	{
-		if (app->project && !EMPTY(app->project->file_patterns))
-		{
-			gchar *patterns;
-
-			patterns = g_strjoinv(" ", app->project->file_patterns);
-			gtk_entry_set_text(GTK_ENTRY(entry), patterns);
-			g_free(patterns);
-		}
-		else
-		{
-			gtk_entry_set_text(GTK_ENTRY(entry), "");
-		}
+		gtk_entry_set_text(GTK_ENTRY(entry), "");
 
 		gtk_widget_set_sensitive(fcombo, FALSE);
 	}
@@ -834,14 +823,11 @@ static GtkWidget *create_fif_file_mode_combo(void)
 	gtk_list_store_append(store, &iter);
 	gtk_list_store_set(store, &iter, 0, _("all"), 1, TRUE, -1);
 	gtk_list_store_append(store, &iter);
-	gtk_list_store_set(store, &iter, 0, _("project"), 1, app->project != NULL, -1);
-	gtk_list_store_append(store, &iter);
 	gtk_list_store_set(store, &iter, 0, _("custom"), 1, TRUE, -1);
 
 	combo = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
 	g_object_unref(store);
 	gtk_widget_set_tooltip_text(combo, _("All: search all files in the directory\n"
-										"Project: use file patterns defined in the project settings\n"
 										"Custom: specify file patterns manually"));
 
 	renderer = gtk_cell_renderer_text_new();
@@ -849,18 +835,6 @@ static GtkWidget *create_fif_file_mode_combo(void)
 	gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(combo), renderer, "text", 0, "sensitive", 1, NULL);
 
 	return combo;
-}
-
-
-/* updates the sensitivity of the project combo item */
-static void update_fif_file_mode_combo(void)
-{
-	GtkTreeModel *model = gtk_combo_box_get_model(GTK_COMBO_BOX(fif_dlg.files_mode_combo));
-	GtkTreeIter iter;
-
-	/* "1" refers to the second list entry, project  */
-	if (gtk_tree_model_get_iter_from_string(model, &iter, "1"))
-		gtk_list_store_set(GTK_LIST_STORE(model), &iter, 1, app->project != NULL, -1);
 }
 
 
@@ -1076,14 +1050,6 @@ void search_show_find_in_files_dialog_full(const gchar *text, const gchar *dir)
 		gtk_entry_set_text(GTK_ENTRY(entry), text);
 	g_free(sel);
 
-	/* add project's base path directory to the dir list, we do this here once
-	 * (in create_fif_dialog() it would fail if a project is opened after dialog creation) */
-	if (app->project != NULL && !EMPTY(app->project->base_path))
-	{
-		ui_combo_box_prepend_text_once(GTK_COMBO_BOX_TEXT(fif_dlg.dir_combo),
-			app->project->base_path);
-	}
-
 	entry = gtk_bin_get_child(GTK_BIN(fif_dlg.dir_combo));
 	if (!EMPTY(dir))
 		cur_dir = g_strdup(dir);	/* custom directory argument passed */
@@ -1123,7 +1089,6 @@ void search_show_find_in_files_dialog_full(const gchar *text, const gchar *dir)
 		g_free(cur_dir);
 	}
 
-	update_fif_file_mode_combo();
 	update_file_patterns(fif_dlg.files_mode_combo, fif_dlg.files_combo);
 
 	/* set the encoding of the current file */
