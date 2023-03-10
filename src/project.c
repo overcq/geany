@@ -115,12 +115,12 @@ E_project_I_open_directory_X_select( GtkFileChooser *chooser
 }
 void
 E_project_I_open_directory( void
-){  GtkWidget *dialog = gtk_file_chooser_dialog_new( "open project directory"
+){  GtkWidget *dialog = gtk_file_chooser_dialog_new( "Open project directory"
     , ( void * )main_widgets.window
     , GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER
-    , "_cancel"
+    , "_Cancel"
     , GTK_RESPONSE_REJECT
-    , "_open"
+    , "_Open"
     , GTK_RESPONSE_ACCEPT
     , NULL
     );
@@ -409,7 +409,8 @@ End:    if(error)
 }
 void
 E_project_I_open_or_create_autoopen_text( void
-){	GtkWidget *dialog = gtk_file_chooser_dialog_new( "Open or create project directory"
+){	char *title = g_strconcat( "Open or create ", H_ocq_I_open_directory_S_list_file, " in directory", NULL );
+    GtkWidget *dialog = gtk_file_chooser_dialog_new( title
     , ( void * )main_widgets.window
     , GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER
     , "_Cancel"
@@ -418,6 +419,7 @@ E_project_I_open_or_create_autoopen_text( void
     , GTK_RESPONSE_ACCEPT
     , NULL
     );
+    g_free(title);
     if( gtk_dialog_run(( void * )dialog ) == GTK_RESPONSE_ACCEPT )
     {	GFile *file = gtk_file_chooser_get_file(( void * )dialog );
 		GFileType type = g_file_query_file_type( file, G_FILE_QUERY_INFO_NONE, 0 );

@@ -1101,7 +1101,6 @@ gint main_lib(gint argc, gchar **argv)
 
 	doc = document_get_current();
 	sidebar_select_openfiles_item(doc);
-	build_menu_update(doc);
 	sidebar_update_tag_list(doc, FALSE);
 
 	E_main_I_setup_window_position();

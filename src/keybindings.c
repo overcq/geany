@@ -318,7 +318,7 @@ static void init_default_kb(void)
 	ADD_KB_GROUP(GEANY_KEY_GROUP_VIEW, _("View"), cb_func_view_action);
 	ADD_KB_GROUP(GEANY_KEY_GROUP_DOCUMENT, _("Document"), cb_func_document_action);
 	ADD_KB_GROUP(GEANY_KEY_GROUP_PROJECT, _("Project"), cb_func_project_action);
-	ADD_KB_GROUP(GEANY_KEY_GROUP_BUILD, _("Build"), build_keybinding);
+	ADD_KB_GROUP(GEANY_KEY_GROUP_BUILD, _("Build"), E_build_Q_action_Z_keyboard_group_X_start);
 	ADD_KB_GROUP(GEANY_KEY_GROUP_TOOLS, _("Tools"), NULL);
 	ADD_KB_GROUP(GEANY_KEY_GROUP_HELP, _("Help"), NULL);
 	ADD_KB_GROUP(GEANY_KEY_GROUP_FOCUS, _("Focus"), cb_func_switch_action);
@@ -683,25 +683,24 @@ static void init_default_kb(void)
 
 	group = keybindings_get_core_group(GEANY_KEY_GROUP_BUILD);
 
-	add_kb(group, GEANY_KEYS_BUILD_COMPILE, NULL,
-		GDK_KEY_F8, 0, "build_compile", _("Compile"), NULL);
-	add_kb(group, GEANY_KEYS_BUILD_LINK, NULL,
-		GDK_KEY_F9, 0, "build_link", _("Build"), NULL);
-	add_kb(group, GEANY_KEYS_BUILD_MAKE, NULL,
-		GDK_KEY_F9, GDK_SHIFT_MASK, "build_make", _("Make all"), NULL);
-	add_kb(group, GEANY_KEYS_BUILD_MAKEOWNTARGET, NULL,
-		GDK_KEY_F9, GDK_SHIFT_MASK | GEANY_PRIMARY_MOD_MASK, "build_makeowntarget",
-		_("Make custom target"), NULL);
-	add_kb(group, GEANY_KEYS_BUILD_MAKEOBJECT, NULL,
-		GDK_KEY_F8, GDK_SHIFT_MASK, "build_makeobject", _("Make object"), NULL);
-	add_kb(group, GEANY_KEYS_BUILD_NEXTERROR, NULL,
-		0, 0, "build_nexterror", _("Next error"), NULL);
-	add_kb(group, GEANY_KEYS_BUILD_PREVIOUSERROR, NULL,
-		0, 0, "build_previouserror", _("Previous error"), NULL);
+	add_kb(group, GEANY_KEYS_BUILD_BUILD, NULL,
+		0, 0, "build_build", _( "make build" ), NULL);
 	add_kb(group, GEANY_KEYS_BUILD_RUN, NULL,
-		GDK_KEY_F5, 0, "build_run", _("Run"), NULL);
-	add_kb(group, GEANY_KEYS_BUILD_OPTIONS, NULL,
-		0, 0, "build_options", _("Build options"), NULL);
+		0, 0, "build_run", _( "make run" ), NULL);
+	add_kb(group, GEANY_KEYS_BUILD_INSTALL, NULL,
+		0, 0, "build_install", _( "make install" ), NULL);
+	add_kb(group, GEANY_KEYS_BUILD_REBUILD, NULL,
+		0, 0, "build_rebuild", _( "make rebuild" ), NULL);
+	add_kb(group, GEANY_KEYS_BUILD_DIST, NULL,
+		0, 0, "build_dist", _( "make dist" ), NULL);
+	add_kb(group, GEANY_KEYS_BUILD_MOSTLYCLEAN, NULL,
+		0, 0, "build_mostlyclean", _( "make mostlyclean" ), NULL);
+	add_kb(group, GEANY_KEYS_BUILD_CLEAN, NULL,
+		0, 0, "build_clean", _( "make clean" ), NULL);
+	add_kb(group, GEANY_KEYS_BUILD_DISTCLEAN, NULL,
+		0, 0, "build_distclean", _( "make distclean" ), NULL);
+	add_kb(group, GEANY_KEYS_BUILD_MAINTAINERCLEAN, NULL,
+		0, 0, "build_maintainerclean", _( "make maintainer-clean" ), NULL);
 
 	group = keybindings_get_core_group(GEANY_KEY_GROUP_TOOLS);
 

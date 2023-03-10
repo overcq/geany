@@ -672,11 +672,12 @@ static GeanyDocument *document_create(const gchar *utf8_filename)
 GEANY_API_SYMBOL
 gboolean document_close(GeanyDocument *doc)
 {
-	if( !doc->file_name && !doc->changed )
+	if( !doc->file_name
+	&& !doc->changed
+	&& gtk_notebook_get_n_pages(( void * )main_widgets.notebook ) == 1
+	)
 		return false;
-	_Bool ret = document_remove_page(document_get_notebook_page(doc));
-	document_new_file_if_non_open();
-	return ret;
+	return document_remove_page(document_get_notebook_page(doc));
 }
 
 
@@ -842,7 +843,6 @@ GeanyDocument *document_new_file(const gchar *utf8_filename, GeanyFiletype *ft, 
 	gtk_widget_show(document_get_notebook_child(doc));
 
 	ui_set_window_title(doc);
-	build_menu_update(doc);
 	document_set_text_changed(doc, FALSE);
 	ui_document_show_hide(doc); /* update the document menu */
 
@@ -2751,7 +2751,6 @@ static void document_load_config(GeanyDocument *doc, GeanyFiletype *type,
 
 		highlighting_set_styles(doc->editor->sci, type);
 		editor_set_indentation_guides(doc->editor);
-		build_menu_update(doc);
 		queue_colourise(doc);
 		if (type->priv->symbol_list_sort_mode == SYMBOLS_SORT_USE_PREVIOUS)
 			doc->priv->symbol_list_sort_mode = interface_prefs.symbols_sort_mode;

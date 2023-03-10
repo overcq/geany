@@ -538,7 +538,6 @@ static void on_notebook1_switch_page_after(GtkNotebook *notebook, gpointer page,
 		ui_update_statusbar(doc, -1);
 		ui_update_popup_reundo_items(doc);
 		ui_document_show_hide(doc); /* update the document menu */
-		build_menu_update(doc);
 		if (g_strcmp0(entry_text, doc->priv->tag_filter) != 0)
 		{
 			/* calls sidebar_update_tag_list() in on_entry_tagfilter_changed() */
@@ -906,12 +905,6 @@ void on_show_color_chooser1_activate(GtkMenuItem *menuitem, gpointer user_data)
 }
 
 
-void on_toolbutton_compile_clicked(GtkAction *action, gpointer user_data)
-{
-	keybindings_send_command(GEANY_KEY_GROUP_BUILD, GEANY_KEYS_BUILD_COMPILE);
-}
-
-
 void on_find1_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
 	search_show_find_dialog();
@@ -1203,12 +1196,6 @@ static void on_menu_unfold_all1_activate(GtkMenuItem *menuitem, gpointer user_da
 	g_return_if_fail(doc != NULL);
 
 	editor_unfold_all(doc->editor);
-}
-
-
-void on_toolbutton_run_clicked(GtkAction *action, gpointer user_data)
-{
-	keybindings_send_command(GEANY_KEY_GROUP_BUILD, GEANY_KEYS_BUILD_RUN);
 }
 
 

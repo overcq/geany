@@ -495,7 +495,6 @@ static gboolean handle_save_as(GeanyDocument *doc,
 	}
 	success = document_save_file_as(doc, utf8_filename);
 
-	build_menu_update(doc);
 	return success;
 }
 

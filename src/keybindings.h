@@ -133,13 +133,11 @@ enum GeanyKeyBindingID
 	GEANY_KEYS_VIEW_ZOOMOUT,					/**< Keybinding. */
 	GEANY_KEYS_GOTO_LINE,						/**< Keybinding. */
 	GEANY_KEYS_DOCUMENT_TOGGLEFOLD,				/**< Keybinding. */
-	GEANY_KEYS_BUILD_COMPILE,					/**< Keybinding. */
 	GEANY_KEYS_EDITOR_SCROLLTOLINE,				/**< Keybinding. */
 	GEANY_KEYS_DOCUMENT_UNFOLDALL,				/**< Keybinding. */
 	GEANY_KEYS_GOTO_MATCHINGBRACE,				/**< Keybinding. */
 	GEANY_KEYS_SEARCH_FINDDOCUMENTUSAGE,		/**< Keybinding. */
 	GEANY_KEYS_CLIPBOARD_PASTE,					/**< Keybinding. */
-	GEANY_KEYS_BUILD_MAKE,						/**< Keybinding. */
 	GEANY_KEYS_INSERT_ALTWHITESPACE,			/**< Keybinding. */
 	GEANY_KEYS_EDITOR_SCROLLLINEDOWN,			/**< Keybinding. */
 	GEANY_KEYS_VIEW_TOGGLEALL,					/**< Keybinding. */
@@ -156,7 +154,6 @@ enum GeanyKeyBindingID
 	GEANY_KEYS_FILE_RELOAD,						/**< Keybinding. */
 	GEANY_KEYS_SEARCH_FINDNEXTSEL,				/**< Keybinding. */
 	GEANY_KEYS_FOCUS_MESSAGES,					/**< Keybinding. */
-	GEANY_KEYS_BUILD_RUN,						/**< Keybinding. */
 	GEANY_KEYS_HELP_HELP,						/**< Keybinding. */
 	GEANY_KEYS_SETTINGS_PLUGINPREFERENCES,		/**< Keybinding. */
 	GEANY_KEYS_VIEW_ZOOMRESET,					/**< Keybinding. */
@@ -187,7 +184,6 @@ enum GeanyKeyBindingID
 	GEANY_KEYS_FILE_OPENSELECTED,				/**< Keybinding. */
 	GEANY_KEYS_GOTO_BACK,						/**< Keybinding. */
 	GEANY_KEYS_INSERT_DATE,						/**< Keybinding. */
-	GEANY_KEYS_BUILD_PREVIOUSERROR,				/**< Keybinding. */
 	GEANY_KEYS_GOTO_LINEENDVISUAL,				/**< Keybinding. */
 	GEANY_KEYS_DOCUMENT_REPLACESPACES,			/**< Keybinding. */
 	GEANY_KEYS_FOCUS_EDITOR,					/**< Keybinding. */
@@ -201,16 +197,13 @@ enum GeanyKeyBindingID
 	GEANY_KEYS_EDITOR_UNDO,						/**< Keybinding. */
 	GEANY_KEYS_EDITOR_MOVELINEDOWN,				/**< Keybinding. */
 	GEANY_KEYS_CLIPBOARD_COPYLINE,				/**< Keybinding. */
-	GEANY_KEYS_BUILD_MAKEOWNTARGET,				/**< Keybinding. */
 	GEANY_KEYS_FORMAT_SENDTOCMD2,				/**< Keybinding. */
 	GEANY_KEYS_SEARCH_MARKALL,					/**< Keybinding. */
-	GEANY_KEYS_BUILD_LINK,						/**< Keybinding. */
 	GEANY_KEYS_FILE_CLOSEALL,					/**< Keybinding. */
 	GEANY_KEYS_GOTO_FORWARD,					/**< Keybinding. */
 	GEANY_KEYS_CLIPBOARD_CUT,					/**< Keybinding. */
 	GEANY_KEYS_NOTEBOOK_SWITCHTABLASTUSED,		/**< Keybinding. */
 	GEANY_KEYS_NOTEBOOK_MOVETABRIGHT,			/**< Keybinding. */
-	GEANY_KEYS_BUILD_OPTIONS,					/**< Keybinding. */
 	GEANY_KEYS_GOTO_TAGDECLARATION,				/**< Keybinding. */
 	GEANY_KEYS_FILE_OPEN,						/**< Keybinding. */
 	GEANY_KEYS_EDITOR_COMPLETESNIPPET,			/**< Keybinding. */
@@ -227,7 +220,6 @@ enum GeanyKeyBindingID
 	GEANY_KEYS_FORMAT_COMMENTLINETOGGLE,		/**< Keybinding. */
 	GEANY_KEYS_SELECT_ALL,						/**< Keybinding. */
 	GEANY_KEYS_DOCUMENT_RELOADTAGLIST,			/**< Keybinding. */
-	GEANY_KEYS_BUILD_NEXTERROR,					/**< Keybinding. */
 	GEANY_KEYS_NOTEBOOK_MOVETABLAST,			/**< Keybinding. */
 	GEANY_KEYS_SELECT_PARAGRAPH,				/**< Keybinding. */
 	GEANY_KEYS_EDITOR_DELETELINE,				/**< Keybinding. */
@@ -249,7 +241,6 @@ enum GeanyKeyBindingID
 	GEANY_KEYS_FORMAT_TOGGLECASE,				/**< Keybinding. */
 	GEANY_KEYS_CLIPBOARD_CUTLINE,				/**< Keybinding. */
 	GEANY_KEYS_DOCUMENT_REMOVE_MARKERS,			/**< Keybinding. */
-	GEANY_KEYS_BUILD_MAKEOBJECT,				/**< Keybinding. */
 	GEANY_KEYS_FORMAT_DECREASEINDENT,			/**< Keybinding. */
 	GEANY_KEYS_FILE_OPENLASTTAB,				/**< Keybinding. */
 	GEANY_KEYS_SEARCH_FINDINFILES,				/**< Keybinding. */
@@ -275,6 +266,15 @@ enum GeanyKeyBindingID
 												 * @since 1.34 (API 238) */
 	GEANY_KEYS_FILE_RELOAD_ALL,					/**< Keybinding.
 												 * @since 1.38 (API 240) */
+	GEANY_KEYS_BUILD_BUILD,				/**< Keybinding. */
+	GEANY_KEYS_BUILD_RUN,				/**< Keybinding. */
+	GEANY_KEYS_BUILD_INSTALL,				/**< Keybinding. */
+	GEANY_KEYS_BUILD_REBUILD,				/**< Keybinding. */
+	GEANY_KEYS_BUILD_DIST,				/**< Keybinding. */
+	GEANY_KEYS_BUILD_MOSTLYCLEAN,				/**< Keybinding. */
+	GEANY_KEYS_BUILD_CLEAN,				/**< Keybinding. */
+	GEANY_KEYS_BUILD_DISTCLEAN,				/**< Keybinding. */
+	GEANY_KEYS_BUILD_MAINTAINERCLEAN,				/**< Keybinding. */
 	GEANY_KEYS_COUNT	/* must not be used by plugins */
 };
 

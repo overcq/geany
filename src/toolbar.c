@@ -68,8 +68,6 @@ static const GtkActionEntry ui_entries[] = {
 	{ "Redo", GTK_STOCK_REDO, NULL, NULL, N_("Redo the last modification"), G_CALLBACK(on_redo1_activate) },
 	{ "NavBack", GTK_STOCK_GO_BACK, NULL, NULL, N_("Navigate back a location"), G_CALLBACK(on_toolbutton_back_activate) },
 	{ "NavFor", GTK_STOCK_GO_FORWARD, NULL, NULL, N_("Navigate forward a location"), G_CALLBACK(on_toolbutton_forward_activate) },
-	{ "Compile", GTK_STOCK_CONVERT, N_("Compile"), NULL, N_("Compile the current file"), G_CALLBACK(on_toolbutton_compile_clicked) },
-	{ "Run", GTK_STOCK_EXECUTE, NULL, NULL, N_("Run or view the current file"), G_CALLBACK(on_toolbutton_run_clicked) },
 	{ "Color", GTK_STOCK_SELECT_COLOR, N_("Color Chooser"), NULL, N_("Open a color chooser dialog, to interactively pick colors from a palette"), G_CALLBACK(on_show_color_chooser1_activate) },
 	{ "ZoomIn", GTK_STOCK_ZOOM_IN, NULL, NULL, N_("Zoom in the text"), G_CALLBACK(on_zoom_in1_activate) },
 	{ "ZoomOut", GTK_STOCK_ZOOM_OUT, NULL, NULL, N_("Zoom out the text"), G_CALLBACK(on_zoom_out1_activate) },
@@ -182,7 +180,6 @@ static GtkWidget *toolbar_reload(const gchar *markup)
 	static guint merge_id = 0;
 	GtkWidget *toolbar_new_file_menu = NULL;
 	GtkWidget *toolbar_recent_files_menu = NULL;
-	GtkWidget *toolbar_build_menu = NULL;
 
 	/* Cleanup old toolbar */
 	if (merge_id > 0)
@@ -200,9 +197,6 @@ static GtkWidget *toolbar_reload(const gchar *markup)
 		toolbar_recent_files_menu = geany_menu_button_action_get_menu(
 					GEANY_MENU_BUTTON_ACTION(gtk_action_group_get_action(group, "Open")));
 		g_object_ref(toolbar_recent_files_menu);
-		toolbar_build_menu = geany_menu_button_action_get_menu(
-					GEANY_MENU_BUTTON_ACTION(gtk_action_group_get_action(group, "Build")));
-		g_object_ref(toolbar_build_menu);
 
 		/* Get rid of it! */
 		gtk_widget_destroy(main_widgets.toolbar);
@@ -279,12 +273,6 @@ static GtkWidget *toolbar_reload(const gchar *markup)
 		geany_menu_button_action_set_menu(GEANY_MENU_BUTTON_ACTION(
 			gtk_action_group_get_action(group, "Open")), toolbar_recent_files_menu);
 		g_object_unref(toolbar_recent_files_menu);
-	}
-	if (toolbar_build_menu != NULL)
-	{
-		geany_menu_button_action_set_menu(GEANY_MENU_BUTTON_ACTION(
-			gtk_action_group_get_action(group, "Build")), toolbar_build_menu);
-		g_object_unref(toolbar_build_menu);
 	}
 
 	/* update button states */
@@ -369,15 +357,6 @@ GtkWidget *toolbar_init(void)
 		GTK_STOCK_OPEN);
 	g_signal_connect(action_open, "button-clicked", G_CALLBACK(on_open1_activate), NULL);
 	gtk_action_group_add_action(group, action_open);
-
-	action_build = geany_menu_button_action_new(
-		"Build", NULL,
-		_("Build the current file"),
-		_("Choose more build actions"),
-		GEANY_STOCK_BUILD);
-	g_signal_connect(action_build, "button-clicked",
-		G_CALLBACK(build_toolbutton_build_clicked), NULL);
-	gtk_action_group_add_action(group, action_build);
 
 	action_searchentry = geany_entry_action_new(
 		"SearchEntry", _("Search Field"), _("Find the entered text in the current file"), FALSE);

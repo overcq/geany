@@ -608,9 +608,6 @@ static void save_dialog_prefs(GKeyFile *config)
 	g_key_file_set_string(config, "tools", "grep_cmd", tool_prefs.grep_cmd ? tool_prefs.grep_cmd : "");
 	g_key_file_set_string(config, PACKAGE, "context_action_cmd", tool_prefs.context_action_cmd);
 
-	/* build menu */
-	build_save_menu(config, NULL, GEANY_BCS_PREF);
-
 	/* printing */
 	g_key_file_set_string(config, "printing", "print_cmd", printing_prefs.external_print_cmd ? printing_prefs.external_print_cmd : "");
 	g_key_file_set_boolean(config, "printing", "use_gtk_printing", printing_prefs.use_gtk_printing);
@@ -1253,11 +1250,6 @@ static gboolean read_config_file(ConfigPayload payload)
 			load_dialog_prefs(config);
 			load_ui_prefs(config);
 
-			/* build menu, after stash prefs as it uses some of them */
-			build_set_group_count(GEANY_GBG_FT, build_menu_prefs.number_ft_menu_items);
-			build_set_group_count(GEANY_GBG_NON_FT, build_menu_prefs.number_non_ft_menu_items);
-			build_set_group_count(GEANY_GBG_EXEC, build_menu_prefs.number_exec_menu_items);
-			build_load_menu(config, GEANY_BCS_PREF, NULL);
 			/* this signal can be used e.g. to delay building UI elements until settings have been read */
 			g_signal_emit_by_name(geany_object, "load-settings", config);
 			break;

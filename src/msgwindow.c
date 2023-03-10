@@ -1317,7 +1317,6 @@ void msgwin_clear_tab(gint tabnum)
 
 		case MSG_COMPILER:
 			gtk_list_store_clear(msgwindow.store_compiler);
-			build_menu_update(NULL);	/* update next error items */
 			return;
 
 		case MSG_STATUS: store = msgwindow.store_status; break;

@@ -110,15 +110,11 @@ void on_go_to_line_activate(GtkMenuItem *menuitem, gpointer user_data);
 
 void on_help1_activate(GtkMenuItem *menuitem, gpointer user_data);
 
-void on_toolbutton_compile_clicked(GtkAction *action, gpointer user_data);
-
 void on_line_wrapping1_toggled(GtkCheckMenuItem *checkmenuitem, gpointer user_data);
 
 void on_toolbutton_goto_entry_activate(GtkAction *action, const gchar *text, gpointer user_data);
 
 void on_toolbutton_goto_clicked(GtkAction *action, gpointer user_data);
-
-void on_toolbutton_run_clicked(GtkAction *action, gpointer user_data);
 
 void on_menu_remove_indicators1_activate(GtkMenuItem *menuitem, gpointer user_data);
 

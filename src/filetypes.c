@@ -958,10 +958,6 @@ static void load_settings(guint ft_id, GKeyFile *config, GKeyFile *configh)
 
 	/* read indent settings */
 	load_indent_settings(ft, config, configh);
-
-	/* read build settings */
-	build_load_menu(config, GEANY_BCS_FT, (gpointer)ft);
-	build_load_menu(configh, GEANY_BCS_HOME_FT, (gpointer)ft);
 }
 
 
@@ -1168,7 +1164,6 @@ void filetypes_save_commands(GeanyFiletype *ft)
 	fname = filetypes_get_filename(ft, TRUE);
 	config_home = g_key_file_new();
 	g_key_file_load_from_file(config_home, fname, G_KEY_FILE_KEEP_COMMENTS, NULL);
-	build_save_menu(config_home, ft, GEANY_BCS_HOME_FT);
 	data = g_key_file_to_data(config_home, NULL, NULL);
 	utils_write_file(fname, data);
 	g_free(data);
