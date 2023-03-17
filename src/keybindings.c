@@ -613,19 +613,21 @@ static void init_default_kb(void)
 	group = keybindings_get_core_group(GEANY_KEY_GROUP_FOCUS);
 
 	add_kb(group, GEANY_KEYS_FOCUS_EDITOR, NULL,
-		GDK_KEY_F2, 0, "switch_editor", _("Switch to Editor"), NULL);
+		0, 0, "switch_editor", _("Switch to Editor"), NULL);
 	add_kb(group, GEANY_KEYS_FOCUS_SEARCHBAR, NULL,
-		GDK_KEY_F7, 0, "switch_search_bar", _("Switch to Search Bar"), NULL);
+		0, 0, "switch_search_bar", _("Switch to Search Bar"), NULL);
 	add_kb(group, GEANY_KEYS_FOCUS_MESSAGE_WINDOW, NULL,
 		0, 0, "switch_message_window", _("Switch to Message Window"), NULL);
+	add_kb(group, GEANY_KEYS_FOCUS_STATUSBAR, NULL,
+		0, 0, "switch_status", _("Switch to Status"), NULL);
 	add_kb(group, GEANY_KEYS_FOCUS_COMPILER, NULL,
 		0, 0, "switch_compiler", _("Switch to Compiler"), NULL);
 	add_kb(group, GEANY_KEYS_FOCUS_MESSAGES, NULL,
 		0, 0, "switch_messages", _("Switch to Messages"), NULL);
-	add_kb(group, GEANY_KEYS_FOCUS_SCRIBBLE, NULL,
-		GDK_KEY_F6, 0, "switch_scribble", _("Switch to Scribble"), NULL);
 	add_kb(group, GEANY_KEYS_FOCUS_VTE, NULL,
-		GDK_KEY_F4, 0, "switch_vte", _("Switch to VTE"), NULL);
+		0, 0, "switch_vte", _("Switch to VTE"), NULL);
+	add_kb(group, GEANY_KEYS_FOCUS_DOCCOMTAB, NULL,
+		0, 0, "switch_doccom", _("Switch to Doc-com"), NULL);
 	add_kb(group, GEANY_KEYS_FOCUS_SIDEBAR, NULL,
 		0, 0, "switch_sidebar", _("Switch to Sidebar"), NULL);
 	add_kb(group, GEANY_KEYS_FOCUS_SIDEBAR_SYMBOL_LIST, NULL,
@@ -1196,7 +1198,6 @@ static gboolean check_menu_key(GeanyDocument *doc, guint keyval, guint state, gu
 		 || focusw == msgwindow.tree_status
 		 || focusw == msgwindow.tree_compiler
 		 || focusw == msgwindow.tree_msg
-		 || focusw == msgwindow.scribble
 #ifdef HAVE_VTE
 		 || (vte_info.have_vte && focusw == vte_config.vte)
 #endif
@@ -1745,19 +1746,13 @@ static gboolean cb_func_switch_action(guint key_id)
 		case GEANY_KEYS_FOCUS_EDITOR:
 		{
 			GeanyDocument *doc = document_get_current();
-			if (doc != NULL)
-			{
-				GtkWidget *sci = GTK_WIDGET(doc->editor->sci);
-				if (gtk_widget_has_focus(sci))
-					ui_update_statusbar(doc, -1);
-				else
-					gtk_widget_grab_focus(sci);
-			}
+			GtkWidget *sci = GTK_WIDGET(doc->editor->sci);
+			if (gtk_widget_has_focus(sci))
+				ui_update_statusbar(doc, -1);
+			else
+				gtk_widget_grab_focus(sci);
 			break;
 		}
-		case GEANY_KEYS_FOCUS_SCRIBBLE:
-			msgwin_switch_tab(MSG_SCRATCH, TRUE);
-			break;
 		case GEANY_KEYS_FOCUS_SEARCHBAR:
 			if (toolbar_prefs.visible)
 			{
@@ -1769,14 +1764,20 @@ static gboolean cb_func_switch_action(guint key_id)
 		case GEANY_KEYS_FOCUS_SIDEBAR:
 			focus_sidebar();
 			break;
+		case GEANY_KEYS_FOCUS_DOCCOMTAB:
+			msgwin_switch_tab( MSG_DOC_COM, FALSE );
+			break;
 		case GEANY_KEYS_FOCUS_VTE:
 			msgwin_switch_tab(MSG_VTE, TRUE);
 			break;
 		case GEANY_KEYS_FOCUS_COMPILER:
-			msgwin_switch_tab(MSG_COMPILER, TRUE);
+			msgwin_switch_tab( MSG_COMPILER, FALSE );
 			break;
 		case GEANY_KEYS_FOCUS_MESSAGES:
-			msgwin_switch_tab(MSG_MESSAGE, TRUE);
+			msgwin_switch_tab( MSG_MESSAGE, FALSE );
+			break;
+		case GEANY_KEYS_FOCUS_STATUSBAR:
+			msgwin_switch_tab( MSG_STATUS, FALSE );
 			break;
 		case GEANY_KEYS_FOCUS_MESSAGE_WINDOW:
 			focus_msgwindow();

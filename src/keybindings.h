@@ -146,7 +146,6 @@ enum GeanyKeyBindingID
 	GEANY_KEYS_EDITOR_CALLTIP,					/**< Keybinding. */
 	GEANY_KEYS_FILE_PRINT,						/**< Keybinding. */
 	GEANY_KEYS_EDITOR_DUPLICATELINE,			/**< Keybinding. */
-	GEANY_KEYS_FOCUS_SCRIBBLE,					/**< Keybinding. */
 	GEANY_KEYS_TOOLS_OPENCOLORCHOOSER,			/**< Keybinding. */
 	GEANY_KEYS_SEARCH_PREVIOUSMESSAGE,			/**< Keybinding. */
 	GEANY_KEYS_FILE_CLOSE,						/**< Keybinding. */
@@ -275,6 +274,8 @@ enum GeanyKeyBindingID
 	GEANY_KEYS_BUILD_CLEAN,				/**< Keybinding. */
 	GEANY_KEYS_BUILD_DISTCLEAN,				/**< Keybinding. */
 	GEANY_KEYS_BUILD_MAINTAINERCLEAN,				/**< Keybinding. */
+	GEANY_KEYS_FOCUS_STATUSBAR,					/**< Keybinding. */
+	GEANY_KEYS_FOCUS_DOCCOMTAB,					/**< Keybinding. */
 	GEANY_KEYS_COUNT	/* must not be used by plugins */
 };
 

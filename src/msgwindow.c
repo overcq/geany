@@ -34,17 +34,21 @@
 
 #include "build.h"
 #include "document.h"
+#include "encodings.h"
+#include "highlighting.h"
 #include "callbacks.h"
 #include "filetypes.h"
 #include "keybindings.h"
 #include "main.h"
 #include "navqueue.h"
 #include "prefs.h"
+#include "sciwrappers.h"
 #include "support.h"
 #include "ui_utils.h"
 #include "utils.h"
 #include "vte.h"
 
+#include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
@@ -81,6 +85,7 @@ enum
 	COMPILER_COL_COUNT
 };
 
+unsigned E_doc_com_I_idle_update_S = 0;
 
 static GdkColor color_error = {0, 0xFFFF, 0, 0};
 static GdkColor color_context = {0, 0x7FFF, 0, 0};
@@ -90,10 +95,223 @@ static GdkColor color_message = {0, 0, 0, 0xD000};
 static void prepare_msg_tree_view(void);
 static void prepare_status_tree_view(void);
 static void prepare_compiler_tree_view(void);
+static void prepare_doc_com_tree_view(void);
 static GtkWidget *create_message_popup_menu(gint type);
 static gboolean on_msgwin_button_press_event(GtkWidget *widget, GdkEventButton *event,
 																			gpointer user_data);
-static void on_scribble_populate(GtkTextView *textview, GtkMenu *arg1, gpointer user_data);
+
+static
+void
+E_doc_com_I_idle_update( void
+){  GeanyDocument *document = document_get_current();
+    if( strcmp( document->encoding, encodings_get_charset_from_index( GEANY_ENCODING_UTF_8 )))
+        return;
+    ScintillaObject *sci = document->editor->sci;
+    gtk_list_store_clear(( void * )msgwindow.store_doc_com );
+    int current_line = sci_get_current_line(sci);
+    int lexer = sci_get_lexer(sci);
+    struct Sci_TextToFind sttf;
+    long last_start = sttf.chrg.cpMin = 0;
+    sttf.chrg.cpMax = sci_get_length(sci);
+    sttf.lpstrText = "[/#'<]";
+    while( sci_find_text( sci, SCFIND_MATCHCASE | SCFIND_REGEXP, &sttf ) != -1 )
+    {   if( !highlighting_is_comment_style( lexer, sci_get_style_at( sci, sttf.chrgText.cpMin ))
+        || ( sttf.chrgText.cpMin
+          && highlighting_is_comment_style( lexer, sci_get_style_at( sci, sttf.chrgText.cpMin - 1 ))
+          && sttf.chrg.cpMin != last_start
+        ))
+        {   sttf.chrg.cpMin = sttf.chrgText.cpMax;
+            goto Next;
+        }
+        int line = sci_get_line_from_position( sci, sttf.chrgText.cpMin );
+        int cnt_end = sci_get_line_end_position( sci, line );
+        _Bool rep_bind = true;
+        char c = sci_get_char_at( sci, sttf.chrgText.cpMin );
+        if( c == '/'
+        || c == '<'
+        )
+        {   struct Sci_TextToFind sttf_;
+            if( c == '/' )
+            {   c = sci_get_char_at( sci, sttf.chrgText.cpMax );
+                if( c == '/' )
+                {   sttf.chrgText.cpMax++;
+                    goto Cont_line;
+                }
+                if( c != '*' )
+                {   sttf.chrg.cpMin = sttf.chrgText.cpMax;
+                    goto Next;
+                }
+                sttf.chrgText.cpMax++;
+                sttf_.lpstrText = "*/";
+            }else
+            {   char *s_ = sci_get_contents_range( sci, sttf.chrgText.cpMax, sttf.chrgText.cpMax + 3 );
+                if( strcmp( s_, "!--" ))
+                {   g_free( s_ );
+                    sttf.chrg.cpMin = sttf.chrgText.cpMax;
+                    goto Next;
+                }
+                g_free( s_ );
+                rep_bind = false;
+                sttf.chrgText.cpMax += 3;
+                sttf_.lpstrText = "-->";
+            }
+            sttf_.chrg.cpMin = sttf.chrgText.cpMax;
+            sttf_.chrg.cpMax = sttf.chrg.cpMax;
+            if( sci_find_text( sci, SCFIND_MATCHCASE, &sttf_ ) == -1 )
+                break;
+            sttf.chrg.cpMin = sttf_.chrgText.cpMax;
+            if( cnt_end > sttf_.chrgText.cpMin )
+                cnt_end = sttf_.chrgText.cpMin;
+        }else
+        {
+Cont_line:  sttf.chrg.cpMin = cnt_end + editor_get_eol_char_len( document->editor );
+        }
+        if( sttf.chrgText.cpMax == cnt_end )
+            goto Next;
+        char *s = sci_get_contents_range( sci, sttf.chrgText.cpMax, cnt_end );
+        char *p = s;
+        gunichar u;
+        _Bool type_doc = false;
+        if( rep_bind )
+        {   u = g_utf8_get_char(p);
+            if( u == c )
+            {   type_doc = true;
+                p = g_utf8_next_char(p);
+            }else if( g_unichar_isspace(u) )
+                p = g_utf8_next_char(p);
+            while( *p
+            && (( u = g_utf8_get_char(p) ) == c
+              || g_unichar_isspace(u)
+            ))
+                p = g_utf8_next_char(p);
+        }else
+            while( *p
+            && g_unichar_isspace( g_utf8_get_char(p) )
+            )
+                p = g_utf8_next_char(p);
+        char *text_orig = p;
+        while( *p
+        && g_unichar_ispunct( g_utf8_get_char(p) )
+        )
+            p = g_utf8_next_char(p);
+        if( !*p )
+            goto Next_s;
+        char *text = p;
+        if( rep_bind )
+        {   p = g_utf8_prev_char( s + ( cnt_end - sttf.chrgText.cpMax ));
+            if(( u = g_utf8_get_char(p) ) == c
+            || g_unichar_isspace(u)
+            ){  if( p == text )
+                    goto Next_s;
+                char *p_;
+                while(( u = g_utf8_get_char( p = g_utf8_prev_char( p_ = p ))) == c
+                || g_unichar_isspace(u)
+                ){  if( p == text )
+                        goto Next_s;
+                }
+                *p_ = '\0';
+            }
+        }
+        p = text;
+        do
+        {   if( !*p )
+                goto Next_s;
+            if( !g_unichar_ispunct( g_utf8_get_char(p) ))
+                break;
+            p = g_utf8_next_char(p);
+        }while(true);
+        char *tag = "";
+        unsigned i = 0;
+        _Bool tag_weak = false;
+        while( g_unichar_isalpha( u = g_utf8_get_char(p) )
+        && ( !tag_weak && !g_unichar_isupper(u) && ( tag_weak = true ), true )
+        && ( p = g_utf8_next_char(p), ++i != 5 )
+        && *p
+        ){}
+        if( i
+        && i != 5
+        )
+        {   if( *p )
+            {   if( g_unichar_ispunct(u) && u != '_'
+                || g_unichar_isspace(u)
+                ){  char *tag_0 = p;
+                    while( g_unichar_ispunct( u = g_utf8_get_char(p) ) && u != '_'
+                    && *( p = g_utf8_next_char(p) )
+                    ){}
+                    while( g_unichar_isspace( g_utf8_get_char(p) )
+                    && *( p = g_utf8_next_char(p) )
+                    ){}
+                    if(( *p
+                      && p != tag_0
+                    ) || !tag_weak
+                    ){  tag = text;
+                        *tag_0 = '\0';
+                        text = p;
+                    }else
+                        text = text_orig;
+                }else
+                    text = text_orig;
+            }else if( !tag_weak )
+            {   tag = text;
+                *p = '\0';
+                text = p;
+            }else
+                text = text_orig;
+        }else
+            text = text_orig;
+        GtkTreeIter iter;
+        gtk_list_store_insert_with_values(( void * )msgwindow.store_doc_com
+        , &iter, -1
+        , 0, line + 1
+        , 1, type_doc
+        , 2, tag
+        , 3, text
+        , -1
+        );
+        if( line == current_line )
+        {   GtkTreePath *path = gtk_tree_model_get_path(( void * )msgwindow.store_doc_com, &iter );
+            gtk_tree_view_set_cursor(( void * )msgwindow.tree_doc_com, path, NULL, false );
+            gtk_tree_path_free(path);
+        }
+Next_s: g_free(s);
+Next:   if( sttf.chrg.cpMin >= sttf.chrg.cpMax )
+            break;
+        last_start = sttf.chrg.cpMin;
+    }
+}
+static
+gboolean
+E_doc_com_I_idle_update_I(
+  void *data
+){  E_doc_com_I_idle_update();
+    E_doc_com_I_idle_update_S = 0;
+    return G_SOURCE_REMOVE;
+}
+void
+E_doc_com_I_idle_update_M( void
+){	if( !E_doc_com_I_idle_update_S )
+		E_doc_com_I_idle_update_S = g_idle_add( E_doc_com_I_idle_update_I, NULL );
+}
+void
+E_doc_com_I_idle_update_W( void
+){  if( E_doc_com_I_idle_update_S )
+    {   g_source_remove( E_doc_com_I_idle_update_S );
+        E_doc_com_I_idle_update_S = 0;
+    }
+}
+void
+E_doc_com_X_row_activated( GtkTreeView *tree_view
+, GtkTreePath *tree_path
+, GtkTreeViewColumn *column
+, void *data
+){  GtkTreeModel *model = gtk_tree_view_get_model( tree_view );
+    GtkTreeIter iter;
+    gtk_tree_model_get_iter( model, &iter, tree_path );
+    int line;
+    gtk_tree_model_get( model, &iter, 0, &line, -1 );
+    GeanyEditor *editor = document_get_current()->editor;
+    editor_goto_pos( editor, sci_get_position_from_line( editor->sci, line - 1 ), TRUE );
+}
 
 
 void msgwin_show_hide_tabs(void)
@@ -101,7 +319,7 @@ void msgwin_show_hide_tabs(void)
 	ui_widget_show_hide(gtk_widget_get_parent(msgwindow.tree_status), interface_prefs.msgwin_status_visible);
 	ui_widget_show_hide(gtk_widget_get_parent(msgwindow.tree_compiler), interface_prefs.msgwin_compiler_visible);
 	ui_widget_show_hide(gtk_widget_get_parent(msgwindow.tree_msg), interface_prefs.msgwin_messages_visible);
-	ui_widget_show_hide(gtk_widget_get_parent(msgwindow.scribble), interface_prefs.msgwin_scribble_visible);
+	ui_widget_show_hide(gtk_widget_get_parent(msgwindow.tree_doc_com), interface_prefs.msgwin_doc_com_visible);
 }
 
 
@@ -145,18 +363,16 @@ void msgwin_init(void)
 	msgwindow.tree_status = ui_lookup_widget(main_widgets.window, "treeview3");
 	msgwindow.tree_msg = ui_lookup_widget(main_widgets.window, "treeview4");
 	msgwindow.tree_compiler = ui_lookup_widget(main_widgets.window, "treeview5");
-	msgwindow.scribble = ui_lookup_widget(main_widgets.window, "textview_scribble");
+	msgwindow.tree_doc_com = ui_lookup_widget(main_widgets.window, "treeview8");
 	msgwindow.messages_dir = NULL;
 
 	prepare_status_tree_view();
 	prepare_msg_tree_view();
 	prepare_compiler_tree_view();
+	prepare_doc_com_tree_view();
 	msgwindow.popup_status_menu = create_message_popup_menu(MSG_STATUS);
 	msgwindow.popup_msg_menu = create_message_popup_menu(MSG_MESSAGE);
 	msgwindow.popup_compiler_menu = create_message_popup_menu(MSG_COMPILER);
-
-	ui_widget_modify_font_from_string(msgwindow.scribble, interface_prefs.msgwin_font);
-	g_signal_connect(msgwindow.scribble, "populate-popup", G_CALLBACK(on_scribble_populate), NULL);
 
 	load_color("geany-compiler-error", &color_error);
 	load_color("geany-compiler-context", &color_context);
@@ -291,6 +507,17 @@ static void prepare_compiler_tree_view(void)
 	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(msgwindow.tree_compiler));
 	gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
 	/*g_signal_connect(selection, "changed", G_CALLBACK(on_msg_tree_selection_changed), NULL);*/
+}
+
+static void prepare_doc_com_tree_view(void)
+{
+    msgwindow.store_doc_com = gtk_list_store_new( 4, G_TYPE_INT, G_TYPE_BOOLEAN, G_TYPE_STRING, G_TYPE_STRING );
+	gtk_tree_view_set_model(( void * )msgwindow.tree_doc_com, ( void * )msgwindow.store_doc_com );
+    g_object_unref( msgwindow.store_doc_com );
+    gtk_tree_view_insert_column_with_attributes(( void * )msgwindow.tree_doc_com, 0, "line", gtk_cell_renderer_text_new(), "text", 0, NULL );
+    gtk_tree_view_insert_column_with_attributes(( void * )msgwindow.tree_doc_com, 1, "doc", gtk_cell_renderer_toggle_new(), "active", 1, NULL );
+    gtk_tree_view_insert_column_with_attributes(( void * )msgwindow.tree_doc_com, 2, "tag", gtk_cell_renderer_text_new(), "text", 2, NULL );
+    gtk_tree_view_insert_column_with_attributes(( void * )msgwindow.tree_doc_com, 3, "text", gtk_cell_renderer_text_new(), "text", 3, NULL );
 }
 
 static const GdkColor *get_color(gint msg_color)
@@ -676,12 +903,6 @@ static GtkWidget *create_message_popup_menu(gint type)
 	msgwin_menu_add_common_items(GTK_MENU(message_popup_menu));
 
 	return message_popup_menu;
-}
-
-
-static void on_scribble_populate(GtkTextView *textview, GtkMenu *arg1, gpointer user_data)
-{
-	msgwin_menu_add_common_items(arg1);
 }
 
 
@@ -1276,10 +1497,10 @@ void msgwin_switch_tab(gint tabnum, gboolean show)
 
 	switch (tabnum)
 	{
-		case MSG_SCRATCH: widget = msgwindow.scribble; break;
 		case MSG_COMPILER: widget = msgwindow.tree_compiler; break;
 		case MSG_STATUS: widget = msgwindow.tree_status; break;
 		case MSG_MESSAGE: widget = msgwindow.tree_msg; break;
+		case MSG_DOC_COM: widget = msgwindow.tree_doc_com; break;
 #ifdef HAVE_VTE
 		case MSG_VTE: widget = (vte_info.have_vte) ? vte_config.vte : NULL; break;
 #endif

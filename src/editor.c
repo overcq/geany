@@ -45,6 +45,7 @@
 #include "geanyobject.h"
 #include "highlighting.h"
 #include "keybindings.h"
+#include "msgwindow.h"
 #include "main.h"
 #include "prefs.h"
 #include "sciwrappers.h"
@@ -1098,6 +1099,8 @@ static gboolean on_editor_notify(G_GNUC_UNUSED GObject *object, GeanyEditor *edi
 			break;
 
  		case SCN_MODIFIED:
+			if( nt->modificationType & ( SC_MOD_INSERTTEXT | SC_MOD_DELETETEXT ))
+				E_doc_com_I_idle_update_M();
 			if (editor_prefs.show_linenumber_margin && (nt->modificationType & (SC_MOD_INSERTTEXT | SC_MOD_DELETETEXT)) && nt->linesAdded)
 			{
 				/* automatically adjust Scintilla's line numbers margin width */

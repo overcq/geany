@@ -552,7 +552,7 @@ static void on_notebook1_switch_page_after(GtkNotebook *notebook, gpointer page,
 #ifdef HAVE_VTE
 		vte_cwd((doc->real_path != NULL) ? doc->real_path : doc->file_name, FALSE);
 #endif
-
+		E_doc_com_I_idle_update_M();
 		g_signal_emit_by_name(geany_object, "document-activate", doc);
 	}
 }
@@ -1221,14 +1221,9 @@ void on_menu_select_all1_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
 	GtkWidget *focusw = gtk_window_get_focus(GTK_WINDOW(main_widgets.window));
 
-	/* special case for Select All in the scribble widget */
-	if (GTK_IS_TEXT_VIEW(focusw))
-	{
-		g_signal_emit_by_name(focusw, "select-all", TRUE);
-	}
 	/* special case for Select All in the VTE widget */
 #ifdef HAVE_VTE
-	else if (vte_info.have_vte && focusw == vte_config.vte)
+	if (vte_info.have_vte && focusw == vte_config.vte)
 	{
 		vte_select_all();
 	}
@@ -1881,18 +1876,6 @@ static void on_indent_width_activate(GtkMenuItem *menuitem, gpointer user_data)
 	doc = document_get_current();
 	if (doc != NULL && width > 0)
 		editor_set_indent_width(doc->editor, width);
-}
-
-
-static void on_reset_indentation1_activate(GtkMenuItem *menuitem, gpointer user_data)
-{
-	guint i;
-
-	foreach_document(i)
-		document_apply_indent_settings(documents[i]);
-
-	ui_update_statusbar(NULL, -1);
-	ui_document_show_hide(NULL);
 }
 
 

@@ -905,7 +905,6 @@ static void init_document_widgets(void)
 	add_doc_widget("go_to_line1");
 	add_doc_widget("goto_tag_definition1");
 	add_doc_widget("goto_tag_declaration1");
-	add_doc_widget("reset_indentation1");
 	add_doc_toolitem("Close");
 	add_doc_toolitem("CloseAll");
 	add_doc_toolitem("Search");
@@ -2272,8 +2271,8 @@ void ui_init_prefs(void)
 		"msgwin_compiler_visible", TRUE);
 	stash_group_add_boolean(group, &interface_prefs.msgwin_messages_visible,
 		"msgwin_messages_visible", TRUE);
-	stash_group_add_boolean(group, &interface_prefs.msgwin_scribble_visible,
-		"msgwin_scribble_visible", TRUE);
+	stash_group_add_boolean(group, &interface_prefs.msgwin_doc_com_visible,
+		"msgwin_doc_com_visible", TRUE);
 	stash_group_add_spin_button_integer(group, &interface_prefs.tab_label_len,
 		"tab_label_length", 99999, "spin_tab_label_len");
 }

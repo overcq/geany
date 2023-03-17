@@ -574,6 +574,13 @@ static void monitor_file_setup(GeanyDocument *doc)
 }
 
 
+void
+E_document_X_activate( GObject *obj
+, GeanyDocument *doc
+, void *data
+){  E_doc_com_I_idle_update_M();
+}
+
 void document_try_focus(GeanyDocument *doc, GtkWidget *source_widget)
 {
 	/* doc might not be valid e.g. if user closed a tab whilst Geany is opening files */
@@ -691,6 +698,7 @@ static gboolean remove_page(guint page_num)
 	if( !main_status.closing_all && doc->changed && !dialogs_show_unsaved_file(doc) )
 		return FALSE;
 
+	E_doc_com_I_idle_update_W();
 	/* tell any plugins that the document is about to be closed */
 	g_signal_emit_by_name(geany_object, "document-close", doc);
 
@@ -2798,6 +2806,7 @@ void document_set_filetype(GeanyDocument *doc, GeanyFiletype *type)
 		}
 
 		sidebar_openfiles_update(doc); /* to update the icon */
+		E_doc_com_I_idle_update_M();
 		g_signal_emit_by_name(geany_object, "document-filetype-set", doc, old_ft);
 	}
 }

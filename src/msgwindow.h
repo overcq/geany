@@ -46,7 +46,7 @@ typedef enum
 	MSG_STATUS = 0,	/**< Index of the status message tab */
 	MSG_COMPILER,	/**< Index of the compiler tab */
 	MSG_MESSAGE,	/**< Index of the messages tab */
-	MSG_SCRATCH,	/**< Index of the scratch tab */
+	MSG_DOC_COM,	/**< Index of the doc-com tab */
 	MSG_VTE			/**< Index of the VTE tab */
 } MessageWindowTabNum;
 
@@ -75,10 +75,11 @@ typedef struct
 	GtkListStore	*store_status;
 	GtkListStore	*store_msg;
 	GtkListStore	*store_compiler;
+	GtkListStore *store_doc_com;
 	GtkWidget		*tree_compiler;
 	GtkWidget		*tree_status;
 	GtkWidget		*tree_msg;
-	GtkWidget		*scribble;
+	GtkWidget *tree_doc_com;
 	GtkWidget		*popup_status_menu;
 	GtkWidget		*popup_msg_menu;
 	GtkWidget		*popup_compiler_menu;
@@ -106,6 +107,13 @@ void msgwin_parse_compiler_error_line(const gchar *string, const gchar *dir,
 									  gchar **filename, gint *line);
 
 gboolean msgwin_goto_messages_file_line(gboolean focus_editor);
+
+void
+E_doc_com_I_idle_update_M(void);
+void
+E_doc_com_I_idle_update_W(void);
+void
+E_doc_com_X_row_activated( GtkTreeView *, GtkTreePath *, GtkTreeViewColumn *, void * );
 
 #endif /* GEANY_PRIVATE */
 

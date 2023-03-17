@@ -106,8 +106,6 @@
 #define GEANY_DEFAULT_FILETYPE_REGEX    "-\\*-\\s*([^\\s]+)\\s*-\\*-"
 
 
-static gchar *scribble_text = NULL;
-static gint scribble_pos = -1;
 static GPtrArray *default_session_files = NULL;
 static gint session_notebook_page;
 static gint hpan_position;
@@ -663,24 +661,6 @@ static void save_ui_prefs(GKeyFile *config)
 	g_key_file_set_boolean(config, PACKAGE, "symbols_group_by_type", ui_prefs.symbols_group_by_type);
 	g_key_file_set_string(config, PACKAGE, "color_picker_palette", ui_prefs.color_picker_palette);
 
-	/* get the text from the scribble textview */
-	{
-		GtkTextBuffer *buffer;
-		GtkTextIter start, end, iter;
-		GtkTextMark *mark;
-
-		buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(msgwindow.scribble));
-		gtk_text_buffer_get_bounds(buffer, &start, &end);
-		scribble_text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
-		g_key_file_set_string(config, PACKAGE, "scribble_text", scribble_text);
-		g_free(scribble_text);
-
-		mark = gtk_text_buffer_get_insert(buffer);
-		gtk_text_buffer_get_iter_at_mark(buffer, &iter, mark);
-		scribble_pos = gtk_text_iter_get_offset(&iter);
-		g_key_file_set_integer(config, PACKAGE, "scribble_pos", scribble_pos);
-	}
-
 	g_key_file_set_string(config, PACKAGE, "custom_date_format", ui_prefs.custom_date_format);
 	if (ui_prefs.custom_commands != NULL)
 	{
@@ -1129,10 +1109,6 @@ static void load_ui_prefs(GKeyFile *config)
 			}
 		}
 	}
-
-	scribble_text = utils_get_setting_string(config, PACKAGE, "scribble_text",
-				_("Type here what you want, use it as a notice/scratch board"));
-	scribble_pos = utils_get_setting_integer(config, PACKAGE, "scribble_pos", -1);
 }
 
 static void load_ui_session(GKeyFile *config)
@@ -1426,18 +1402,6 @@ void configuration_open_default_session(void)
  * realisation of the main window */
 void configuration_apply_settings(void)
 {
-	if (scribble_text)
-	{	/* update the scribble widget, because now it's realized */
-		GtkTextIter iter;
-		GtkTextBuffer *buffer =
-			gtk_text_view_get_buffer(GTK_TEXT_VIEW(msgwindow.scribble));
-
-		gtk_text_buffer_set_text(buffer, scribble_text, -1);
-		gtk_text_buffer_get_iter_at_offset(buffer, &iter, scribble_pos);
-		gtk_text_buffer_place_cursor(buffer, &iter);
-	}
-	g_free(scribble_text);
-
 	/* set the position of the hpaned and vpaned */
 	if (prefs.save_winpos)
 	{
