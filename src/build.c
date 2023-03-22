@@ -499,87 +499,55 @@ E_compile_I_make(
     )
         return false;
     E_compile_I_make_I_save( dir_1 ? dir_1 : dir );
-    if( GPOINTER_TO_UINT(target) != (unsigned)~0 )
-    {   char *dir_path = g_file_get_path( dir_1 ? dir_1 : dir );
-        if( dir_1 )
-            g_object_unref( dir_1 );
-        if(dir)
-            g_object_unref(dir);
-        E_compile_I_make_S_cx_project = g_str_has_suffix( document->file_name, ".cx" );
-        _Bool ret = E_compile_I_exec(( char *[] ){ "make", "-s", "--", target, NULL }
-        , dir_path
-        );
-        g_free( dir_path );
-        return ret;
-    }
-    if(dir)
-        g_object_unref(dir);
-    return true;
+    char *dir_path = g_file_get_path( dir_1 ? dir_1 : dir );
+	if( dir_1 )
+		g_object_unref( dir_1 );
+	if(dir)
+		g_object_unref(dir);
+	E_compile_I_make_S_cx_project = g_str_has_suffix( document->file_name, ".cx" );
+	_Bool ret = E_compile_I_exec(( char *[] ){ "make", "-s", "--", target, NULL }
+	, dir_path
+	);
+	g_free( dir_path );
+	return ret;
 }
-static
 void
 Q_action_Z_menu_X_start( GtkWidget *menu_item
 , void *action_id_
 ){  if( g_mutex_trylock( &Q_action_S_mutex ))
-    {   unsigned action_id = GPOINTER_TO_UINT( action_id_ );
-        _Bool result;
-        if( action_id != ( unsigned )~0 )
-            result = E_compile_I_make( g_ptr_array_index( Q_action_S_build_target, action_id - GEANY_KEYS_BUILD_BUILD ));
-        else
-            result = E_compile_I_make(( void * )~0 );
-        if( !result )
+    {   unsigned action_id;
+		if( action_id_ )
+			action_id = GPOINTER_TO_UINT( action_id_ );
+		else
+        {	GList *children = gtk_container_get_children(( void * )gtk_widget_get_parent( menu_item ));
+			action_id = 0;
+			GList *list = children;
+			while( list->data != ( void * )menu_item )
+			{	if( !GTK_IS_SEPARATOR_MENU_ITEM( list->data ))
+					action_id++;
+				list = list->next;
+			}
+			g_list_free(children);
+		}
+		if( !E_compile_I_make( g_ptr_array_index( Q_action_S_build_target, action_id )))
             g_mutex_unlock( &Q_action_S_mutex );
     }
 }
 gboolean
 E_build_Q_action_Z_keyboard_group_X_start( guint key_id
-){  Q_action_Z_menu_X_start( NULL, GUINT_TO_POINTER( key_id ));
+){  Q_action_Z_menu_X_start( NULL, GUINT_TO_POINTER( key_id - GEANY_KEYS_BUILD_BUILD ));
     return true;
-}
-static
-inline
-void
-Q_action_Z_menu_I_add( GtkWidget *menu
-, char *item_text
-, unsigned action_id
-){  GtkWidget *menu_item = gtk_menu_item_new_with_mnemonic( item_text );
-    gtk_widget_show( menu_item );
-	gtk_menu_shell_append(( void * )menu, menu_item );
-    g_signal_connect(( void * )menu_item, "activate", ( void * )Q_action_Z_menu_X_start, GSIZE_TO_POINTER( action_id ));
-}
-static
-void
-Q_action_Z_menu_I_add_make( GtkWidget *menu
-, char *item_text
-, char *target
-, unsigned action_id
-){  g_ptr_array_add( Q_action_S_build_target, target );
-	Q_action_Z_menu_I_add( menu, item_text, action_id );
-}
-static
-void
-Q_menu_I_add_separator( GtkWidget *menu
-){  GtkWidget *menu_item = gtk_separator_menu_item_new();
-    gtk_menu_shell_append(( void * )menu, menu_item );
 }
 void
 build_init( void
 ){  Q_action_S_build_target = g_ptr_array_new();
-	GtkWidget *menu = gtk_menu_new();
-#define J_gtk_menu_add_item_make(label,target,action_id) Q_action_Z_menu_I_add_make( menu, label, J_s(target), action_id )
-    J_gtk_menu_add_item_make( "make _build", build, GEANY_KEYS_BUILD_BUILD );
-    J_gtk_menu_add_item_make( "make _run", run, GEANY_KEYS_BUILD_RUN );
-    J_gtk_menu_add_item_make( "make _install", install, GEANY_KEYS_BUILD_INSTALL );
-    Q_menu_I_add_separator(menu);
-    J_gtk_menu_add_item_make( "make re_build", rebuild, GEANY_KEYS_BUILD_REBUILD );
-    Q_menu_I_add_separator(menu);
-    J_gtk_menu_add_item_make( "make di_st", dist, GEANY_KEYS_BUILD_DIST );
-    Q_menu_I_add_separator(menu);
-    J_gtk_menu_add_item_make( "make most_lyclean", mostlyclean, GEANY_KEYS_BUILD_MOSTLYCLEAN );
-    J_gtk_menu_add_item_make( "make clea_n", clean, GEANY_KEYS_BUILD_CLEAN );
-    J_gtk_menu_add_item_make( "make distcl_ean", distclean, GEANY_KEYS_BUILD_DISTCLEAN );
-    J_gtk_menu_add_item_make( "make m_aintainer-clean", maintainer-clean, GEANY_KEYS_BUILD_MAINTAINERCLEAN );
-#undef J_gtk_menu_add_item_make
-    gtk_widget_show(menu);
-	gtk_menu_item_set_submenu(( void * )ui_lookup_widget( main_widgets.window, "menu_build1" ), menu );
+    g_ptr_array_add( Q_action_S_build_target, "build" );
+    g_ptr_array_add( Q_action_S_build_target, "run" );
+    g_ptr_array_add( Q_action_S_build_target, "install" );
+    g_ptr_array_add( Q_action_S_build_target, "rebuild" );
+    g_ptr_array_add( Q_action_S_build_target, "dist" );
+    g_ptr_array_add( Q_action_S_build_target, "mostlyclean" );
+    g_ptr_array_add( Q_action_S_build_target, "clean" );
+    g_ptr_array_add( Q_action_S_build_target, "distclean" );
+    g_ptr_array_add( Q_action_S_build_target, "maintainer-clean" );
 }

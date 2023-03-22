@@ -2343,6 +2343,111 @@
                     <property name="can-focus">False</property>
                     <property name="label" translatable="yes">_Build</property>
                     <property name="use-underline">True</property>
+                    <child type="submenu">
+                      <object class="GtkMenu" id="menu_build1_menu">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <child>
+                          <object class="GtkMenuItem">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">make _build</property>
+                            <property name="use-underline">True</property>
+                            <signal name="activate" handler="Q_action_Z_menu_X_start" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">make _run</property>
+                            <property name="use-underline">True</property>
+                            <signal name="activate" handler="Q_action_Z_menu_X_start" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">make _install</property>
+                            <property name="use-underline">True</property>
+                            <signal name="activate" handler="Q_action_Z_menu_X_start" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkSeparatorMenuItem">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">make _rebuild</property>
+                            <property name="use-underline">True</property>
+                            <signal name="activate" handler="Q_action_Z_menu_X_start" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkSeparatorMenuItem">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">make _dist</property>
+                            <property name="use-underline">True</property>
+                            <signal name="activate" handler="Q_action_Z_menu_X_start" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkSeparatorMenuItem">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">make _mostlyclean</property>
+                            <property name="use-underline">True</property>
+                            <signal name="activate" handler="Q_action_Z_menu_X_start" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">make _clean</property>
+                            <property name="use-underline">True</property>
+                            <signal name="activate" handler="Q_action_Z_menu_X_start" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">make di_stclean</property>
+                            <property name="use-underline">True</property>
+                            <signal name="activate" handler="Q_action_Z_menu_X_start" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">make m_aintainer-clean</property>
+                            <property name="use-underline">True</property>
+                            <signal name="activate" handler="Q_action_Z_menu_X_start" swapped="no"/>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
                   </object>
                 </child>
                 <child>

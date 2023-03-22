@@ -145,6 +145,9 @@ gboolean build_parse_make_dir(const gchar *string, gchar **prefix);
 
 gchar **build_get_regex(GeanyBuildGroup grp, GeanyFiletype *ft, guint *from);
 
+void
+Q_action_Z_menu_X_start( GtkWidget *, void * );
+
 gboolean
 E_build_Q_action_Z_keyboard_group_X_start(guint);
 
