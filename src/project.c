@@ -93,14 +93,14 @@ E_project_I_open_directory_I_slist_free1( void *p
 static
 gboolean
 E_project_I_open_directory_X_folder_I_timeout( void *chooser
-){  char *s = gtk_file_chooser_get_uri(chooser);
+){  char *s = gtk_file_chooser_get_uri( GTK_FILE_CHOOSER(chooser) );
     if( !s )
         goto End;
     GFile *dir = g_file_new_for_uri(s);
     g_free(s);
     GFile *file = g_file_get_child( dir, H_ocq_I_open_directory_S_list_file );
     g_object_unref(dir);
-    gtk_dialog_set_response_sensitive( chooser, GTK_RESPONSE_ACCEPT, g_file_query_exists( file, 0 ));
+    gtk_dialog_set_response_sensitive( GTK_DIALOG(chooser), GTK_RESPONSE_ACCEPT, g_file_query_exists( file, 0 ));
     g_object_unref(file);
 End:H_ocq_E_geany_I_open_directory_X_folder_S_timeout = 0;
     return G_SOURCE_REMOVE;

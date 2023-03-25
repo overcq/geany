@@ -184,7 +184,18 @@ gboolean build_parse_make_dir(const gchar *string, gchar **prefix)
 #define J_ab(a,b) J_ab_( a, b )
 #define J_a_b(a,b) J_ab( J_ab( a, _ ), b )
 
-static GPtrArray *Q_action_S_build_target;
+static
+char *Q_action_S_build_target[] =
+{ "build"
+, "run"
+, "install"
+, "rebuild"
+, "dist"
+, "mostlyclean"
+, "clean"
+, "distclean"
+, "maintainer-clean"
+};
 static GMutex Q_action_S_mutex;
 static GIOChannel *E_compile_S_channel_out, *E_compile_S_channel_err;
 static GPid E_compile_S_pid = ( GPid )~0;
@@ -193,8 +204,7 @@ static _Bool E_compile_I_make_S_cx_project;
 
 void
 build_finalize( void
-){  g_ptr_array_unref( Q_action_S_build_target );
-	g_free(build_info.dir);
+){  g_free(build_info.dir);
 	g_free(build_info.custom_target);
 }
 static
@@ -517,9 +527,9 @@ Q_action_Z_menu_X_start( GtkWidget *menu_item
 ){  if( g_mutex_trylock( &Q_action_S_mutex ))
     {   unsigned action_id;
 		if( action_id_ )
-			action_id = GPOINTER_TO_UINT( action_id_ );
+			action_id = GPOINTER_TO_UINT( action_id_ ) - 1;
 		else
-        {	GList *children = gtk_container_get_children(( void * )gtk_widget_get_parent( menu_item ));
+        {	GList *children = gtk_container_get_children( GTK_CONTAINER( gtk_widget_get_parent( menu_item )));
 			action_id = 0;
 			GList *list = children;
 			while( list->data != ( void * )menu_item )
@@ -529,25 +539,16 @@ Q_action_Z_menu_X_start( GtkWidget *menu_item
 			}
 			g_list_free(children);
 		}
-		if( !E_compile_I_make( g_ptr_array_index( Q_action_S_build_target, action_id )))
+		if( !E_compile_I_make( Q_action_S_build_target[ action_id ] ))
             g_mutex_unlock( &Q_action_S_mutex );
     }
 }
 gboolean
 E_build_Q_action_Z_keyboard_group_X_start( guint key_id
-){  Q_action_Z_menu_X_start( NULL, GUINT_TO_POINTER( key_id - GEANY_KEYS_BUILD_BUILD ));
+){  Q_action_Z_menu_X_start( NULL, GUINT_TO_POINTER( key_id - GEANY_KEYS_BUILD_BUILD + 1 ));
     return true;
 }
 void
 build_init( void
-){  Q_action_S_build_target = g_ptr_array_new();
-    g_ptr_array_add( Q_action_S_build_target, "build" );
-    g_ptr_array_add( Q_action_S_build_target, "run" );
-    g_ptr_array_add( Q_action_S_build_target, "install" );
-    g_ptr_array_add( Q_action_S_build_target, "rebuild" );
-    g_ptr_array_add( Q_action_S_build_target, "dist" );
-    g_ptr_array_add( Q_action_S_build_target, "mostlyclean" );
-    g_ptr_array_add( Q_action_S_build_target, "clean" );
-    g_ptr_array_add( Q_action_S_build_target, "distclean" );
-    g_ptr_array_add( Q_action_S_build_target, "maintainer-clean" );
+){
 }
