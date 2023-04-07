@@ -2348,7 +2348,7 @@
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <child>
-                          <object class="GtkMenuItem">
+                          <object class="GtkMenuItem" id="build_build">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">make _build</property>
@@ -2357,7 +2357,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="GtkMenuItem">
+                          <object class="GtkMenuItem" id="build_run">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">make _run</property>
@@ -2366,7 +2366,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="GtkMenuItem">
+                          <object class="GtkMenuItem" id="build_install">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">make _install</property>
@@ -2381,7 +2381,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="GtkMenuItem">
+                          <object class="GtkMenuItem" id="build_rebuild">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">make _rebuild</property>
@@ -2396,7 +2396,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="GtkMenuItem">
+                          <object class="GtkMenuItem" id="build_dist">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">make _dist</property>
@@ -2411,7 +2411,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="GtkMenuItem">
+                          <object class="GtkMenuItem" id="build_mostlyclean">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">make _mostlyclean</property>
@@ -2420,7 +2420,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="GtkMenuItem">
+                          <object class="GtkMenuItem" id="build_clean">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">make _clean</property>
@@ -2429,7 +2429,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="GtkMenuItem">
+                          <object class="GtkMenuItem" id="build_distclean">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">make di_stclean</property>
@@ -2438,7 +2438,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="GtkMenuItem">
+                          <object class="GtkMenuItem" id="build_maintainerclean">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">make m_aintainer-clean</property>

@@ -686,23 +686,23 @@ static void init_default_kb(void)
 	group = keybindings_get_core_group(GEANY_KEY_GROUP_BUILD);
 
 	add_kb(group, GEANY_KEYS_BUILD_BUILD, NULL,
-		0, 0, "build_build", _( "make build" ), NULL);
+		0, 0, "build_build", _( "make build" ), "build_build");
 	add_kb(group, GEANY_KEYS_BUILD_RUN, NULL,
-		0, 0, "build_run", _( "make run" ), NULL);
+		0, 0, "build_run", _( "make run" ), "build_run");
 	add_kb(group, GEANY_KEYS_BUILD_INSTALL, NULL,
-		0, 0, "build_install", _( "make install" ), NULL);
+		0, 0, "build_install", _( "make install" ), "build_install");
 	add_kb(group, GEANY_KEYS_BUILD_REBUILD, NULL,
-		0, 0, "build_rebuild", _( "make rebuild" ), NULL);
+		0, 0, "build_rebuild", _( "make rebuild" ), "build_rebuild");
 	add_kb(group, GEANY_KEYS_BUILD_DIST, NULL,
-		0, 0, "build_dist", _( "make dist" ), NULL);
+		0, 0, "build_dist", _( "make dist" ), "build_dist");
 	add_kb(group, GEANY_KEYS_BUILD_MOSTLYCLEAN, NULL,
-		0, 0, "build_mostlyclean", _( "make mostlyclean" ), NULL);
+		0, 0, "build_mostlyclean", _( "make mostlyclean" ), "build_mostlyclean");
 	add_kb(group, GEANY_KEYS_BUILD_CLEAN, NULL,
-		0, 0, "build_clean", _( "make clean" ), NULL);
+		0, 0, "build_clean", _( "make clean" ), "build_clean");
 	add_kb(group, GEANY_KEYS_BUILD_DISTCLEAN, NULL,
-		0, 0, "build_distclean", _( "make distclean" ), NULL);
+		0, 0, "build_distclean", _( "make distclean" ), "build_distclean");
 	add_kb(group, GEANY_KEYS_BUILD_MAINTAINERCLEAN, NULL,
-		0, 0, "build_maintainerclean", _( "make maintainer-clean" ), NULL);
+		0, 0, "build_maintainerclean", _( "make maintainer-clean" ), "build_maintainerclean");
 
 	group = keybindings_get_core_group(GEANY_KEY_GROUP_TOOLS);
 
