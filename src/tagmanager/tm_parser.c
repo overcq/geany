@@ -1080,6 +1080,18 @@ static TMParserMapGroup group_BATCH[] = {
 	{N_("Variables"), TM_ICON_VAR, tm_tag_variable_t},
 };
 
+static TMParserMapEntry map_AUTOIT[] = {
+	{'f', tm_tag_function_t},
+	{'r', tm_tag_other_t},
+	{'g', tm_tag_undef_t},
+	{'l', tm_tag_undef_t},
+	{'S', tm_tag_undef_t},
+};
+static TMParserMapGroup group_AUTOIT[] = {
+	{N_("Functions"), TM_ICON_METHOD, tm_tag_function_t},
+	{N_("Regions"), TM_ICON_OTHER, tm_tag_other_t},
+};
+
 typedef struct
 {
     TMParserMapEntry *entries;
@@ -1151,6 +1163,7 @@ static TMParserMap parser_map[] = {
 	MAP_ENTRY(LISP),
 	MAP_ENTRY(TYPESCRIPT),
 	MAP_ENTRY(BATCH),
+	MAP_ENTRY(AUTOIT),
 };
 /* make sure the parser map is consistent and complete */
 G_STATIC_ASSERT(G_N_ELEMENTS(parser_map) == TM_PARSER_COUNT);
@@ -1542,37 +1555,36 @@ gchar *tm_parser_format_function(TMParserType lang, const gchar *fname, const gc
 
 	if (retval)
 	{
+		const gchar *sep = NULL;
+
 		switch (lang)
 		{
-			case TM_PARSER_GDSCRIPT:
-			case TM_PARSER_GO:
+			/* retval after function */
 			case TM_PARSER_PASCAL:
+				sep = ": ";
+				break;
+			case TM_PARSER_GDSCRIPT:
 			case TM_PARSER_PYTHON:
-			{
-				/* retval after function */
-				const gchar *sep;
-				switch (lang)
-				{
-					case TM_PARSER_PASCAL:
-						sep = ": ";
-						break;
-					case TM_PARSER_GDSCRIPT:
-					case TM_PARSER_PYTHON:
-						sep = " -> ";
-						break;
-					default:
-						sep = " ";
-						break;
-				}
-				g_string_append(str, sep);
-				g_string_append(str, retval);
+				sep = " -> ";
 				break;
-			}
+			case TM_PARSER_GO:
+				sep = " ";
+				break;
 			default:
-				/* retval before function */
-				g_string_prepend_c(str, ' ');
-				g_string_prepend(str, retval);
 				break;
+		}
+
+		if (sep)
+		{
+			/* retval after function */
+			g_string_append(str, sep);
+			g_string_append(str, retval);
+		}
+		else
+		{
+			/* retval before function */
+			g_string_prepend_c(str, ' ');
+			g_string_prepend(str, retval);
 		}
 	}
 
@@ -1666,6 +1678,7 @@ gboolean tm_parser_has_full_scope(TMParserType lang)
 		case TM_PARSER_VHDL:
 		case TM_PARSER_VERILOG:
 		case TM_PARSER_ZEPHIR:
+		case TM_PARSER_AUTOIT:
 			return TRUE;
 
 		/* These make use of the scope, but don't include nested hierarchy
