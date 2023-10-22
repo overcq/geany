@@ -41,7 +41,7 @@ G_BEGIN_DECLS
 #define GEANY_FILEDEFS_SUBDIR			"filedefs"
 #define GEANY_TEMPLATES_SUBDIR			"templates"
 #define GEANY_TAGS_SUBDIR				"tags"
-#define GEANY_CODENAME					"Pryce"
+#define GEANY_CODENAME					"Yage"
 #define GEANY_HOMEPAGE                  "https://github.com/overcq/geany"
 #define GEANY_WIKI						"https://wiki.geany.org/"
 #define GEANY_STRING_UNTITLED			_("untitled")

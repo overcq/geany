@@ -1,6 +1,6 @@
 project('geany', 'c', 'cpp',
         meson_version: '>= 0.53',
-        version: '1.38',
+        version: '2.1',
         default_options : ['c_std=c11', 'cpp_std=c++17'])
 
 gnome = import('gnome')
@@ -13,7 +13,7 @@ prefix = get_option('prefix')
 deps_in = [
 	['glib-2.0',    '2.32'],
 	['gmodule-2.0', '2.32'],
-	['gtk+-3.0',    '3.0']
+	['gtk+-3.0',    '3.24']
 ]
 
 deps = []
@@ -166,12 +166,14 @@ python = pymod.find_installation('python3', modules: doxygen.found() and get_opt
 rst2html = find_program('rst2html', required: get_option('html-docs'))
 rst2pdf = find_program('rst2pdf', required: get_option('pdf-docs'))
 git = find_program('git', required: false)
+revision = '-1'
 if git.found()
-	ret = run_command(git, 'rev-parse', '--short', '--revs-only', 'HEAD', check: true)
-	cdata.set_quoted('REVISION', ret.stdout().strip())
-else
-	cdata.set_quoted('REVISION', '-1')
+	ret = run_command(git, 'rev-parse', '--short', '--revs-only', 'HEAD', check: false)
+	if ret.returncode() == 0
+		revision = ret.stdout().strip()
+	endif
 endif
+cdata.set_quoted('REVISION', revision)
 
 python_command = get_option('python-command')
 if python_command == '' or python_command == 'auto'
@@ -232,7 +234,7 @@ sci_cflags += [ '-std=c++17', '-Wno-non-virtual-dtor', '-DNDEBUG', '-DSCI_LEXER'
 
 iregex = include_directories('ctags/gnu_regex')
 ifnmatch = include_directories('ctags/fnmatch')
-ictags = include_directories('ctags/main', 'ctags/parsers', 'ctags/dsl')
+ictags = include_directories('ctags/main', 'ctags/parsers', 'ctags/dsl', 'ctags/libreadtags')
 itagmanager = include_directories('src/tagmanager')
 iscintilla = include_directories('scintilla/include', 'scintilla/lexilla/include')
 igeany = include_directories('src')
@@ -347,6 +349,7 @@ scintilla = static_library('scintilla',
 	'scintilla/gtk/ScintillaGTK.h',
 	'scintilla/gtk/scintilla-marshal.c',
 	'scintilla/gtk/scintilla-marshal.h',
+	'scintilla/gtk/Wrappers.h',
 	'scintilla/include/ILexer.h',
 	'scintilla/include/ILoader.h',
 	'scintilla/include/ScintillaCall.h',
@@ -366,6 +369,8 @@ scintilla = static_library('scintilla',
 	'scintilla/src/CaseFolder.h',
 	'scintilla/src/CellBuffer.cxx',
 	'scintilla/src/CellBuffer.h',
+	'scintilla/src/ChangeHistory.cxx',
+	'scintilla/src/ChangeHistory.h',
 	'scintilla/src/CharacterCategoryMap.cxx',
 	'scintilla/src/CharacterCategoryMap.h',
 	'scintilla/src/CharacterType.cxx',
@@ -469,6 +474,8 @@ ctags = static_library('ctags',
 	'ctags/dsl/es.h',
 	'ctags/dsl/optscript.c',
 	'ctags/dsl/optscript.h',
+	'ctags/libreadtags/readtags.c',
+	'ctags/libreadtags/readtags.h',
 	'ctags/main/args.c',
 	'ctags/main/args_p.h',
 	'ctags/main/colprint.c',
