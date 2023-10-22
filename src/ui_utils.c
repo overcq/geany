@@ -2070,16 +2070,9 @@ static void on_config_file_clicked(GtkWidget *widget, gpointer user_data)
 			g_file_get_contents(global_file, &global_content, NULL, NULL);
 
 		doc = document_new_file(utf8_filename, ft, global_content);
-		if (global_content)
+		if (global_content && doc->file_type->id == GEANY_FILETYPES_CONF)
 		{
-			if (doc->file_type->id == GEANY_FILETYPES_CONF)
-				comment_conf_files(doc->editor->sci);
-			else
-			{
-				sci_select_all(doc->editor->sci);
-				keybindings_send_command(GEANY_KEY_GROUP_FORMAT,
-					GEANY_KEYS_FORMAT_COMMENTLINETOGGLE);
-			}
+			comment_conf_files(doc->editor->sci);
 			sci_set_current_line(doc->editor->sci, 0);
 			document_set_text_changed(doc, FALSE);
 			sci_empty_undo_buffer(doc->editor->sci);
@@ -2308,7 +2301,7 @@ void ui_init_prefs(void)
 	stash_group_add_boolean(group, &interface_prefs.msgwin_doc_com_visible,
 		"msgwin_doc_com_visible", TRUE);
 	stash_group_add_spin_button_integer(group, &interface_prefs.tab_label_len,
-		"tab_label_length", 99999, "spin_tab_label_len");
+		"tab_label_length", 1000, "spin_tab_label_len");
 }
 
 
@@ -2491,8 +2484,10 @@ static void init_css_styles(void)
 	}
 	css_files[] =
 	{
-		{ 20, G_MAXUINT, "geany-3.20.css" },
-		{ 0, 19, "geany-3.0.css" },
+		/* Unused now but can be used to load css for different GTK versions, such as
+		 * { 20, G_MAXUINT, "geany-3.20.css" },
+		 * { 0, 19, "geany-3.0.css" },
+		 */
 	};
 
 	guint gtk_version = gtk_get_minor_version();
@@ -2960,7 +2955,7 @@ gboolean ui_is_keyval_enter_or_return(guint keyval)
 
 
 /** Reads an integer from the GTK default settings registry
- * (see http://library.gnome.org/devel/gtk/stable/GtkSettings.html).
+ * (see https://docs.gtk.org/gtk3/class.Settings.html).
  * @param property_name The property to read.
  * @param default_value The default value in case the value could not be read.
  * @return The value for the property if it exists, otherwise the @a default_value.
@@ -3158,16 +3153,4 @@ gboolean ui_encodings_combo_box_set_active_encoding(GtkComboBox *combo, gint enc
 		return TRUE;
 	}
 	return FALSE;
-}
-
-void ui_menu_popup(GtkMenu* menu, GtkMenuPositionFunc func, gpointer data, guint button, guint32 activate_time)
-{
-	/* Use appropriate function for menu popup:
-		- gtk_menu_popup_at_pointer is not available on GTK older than 3.22
-		- gtk_menu_popup is deprecated and causes issues on multimonitor wayland setups */
-#if GTK_CHECK_VERSION(3,22,0)
-	gtk_menu_popup_at_pointer(GTK_MENU(menu), NULL);
-#else
-	gtk_menu_popup(GTK_MENU(menu), NULL, NULL, func, data, button, activate_time);
-#endif
 }

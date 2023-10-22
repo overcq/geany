@@ -153,7 +153,7 @@ gint tm_parser_scope_autocomplete_suffix(TMParserType lang, const gchar *str);
 
 const gchar *tm_parser_get_constructor_method(TMParserType lang);
 
-gboolean tm_parser_is_anon_name(TMParserType lang, gchar *name);
+gboolean tm_parser_is_anon_name(TMParserType lang, const gchar *name);
 
 gchar *tm_parser_update_scope(TMParserType lang, gchar *scope);
 
@@ -161,7 +161,8 @@ gboolean tm_parser_enable_role(TMParserType lang, gchar kind);
 
 gboolean tm_parser_enable_kind(TMParserType lang, gchar kind);
 
-gchar *tm_parser_format_variable(TMParserType lang, const gchar *name, const gchar *type);
+gchar *tm_parser_format_variable(TMParserType lang, const gchar *name, const gchar *type,
+	const gchar *scope);
 
 gchar *tm_parser_format_function(TMParserType lang, const gchar *fname, const gchar *args,
 	const gchar *retval, const gchar *scope);

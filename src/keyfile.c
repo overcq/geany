@@ -92,7 +92,8 @@
 #define GEANY_DEFAULT_FONT_MSG_WINDOW	"Menlo Medium 12"
 #define GEANY_DEFAULT_FONT_EDITOR		"Menlo Medium 12"
 #else
-#define GEANY_DEFAULT_TOOLS_BROWSER		"firefox"
+/* Browser chosen by GTK */
+#define GEANY_DEFAULT_TOOLS_BROWSER		""
 #define GEANY_DEFAULT_FONT_SYMBOL_LIST	"Sans 9"
 #define GEANY_DEFAULT_FONT_MSG_WINDOW	"Monospace 9"
 #define GEANY_DEFAULT_FONT_EDITOR		"Monospace 10"
@@ -272,6 +273,10 @@ static void init_pref_groups(void)
 		"radio_virtualspace_selection", GEANY_VIRTUAL_SPACE_SELECTION,
 		"radio_virtualspace_always", GEANY_VIRTUAL_SPACE_ALWAYS,
 		NULL);
+	stash_group_add_toggle_button(group, &editor_prefs.change_history_markers,
+		"change_history_markers", FALSE, "check_change_history_markers");
+	stash_group_add_toggle_button(group, &editor_prefs.change_history_indicators,
+		"change_history_indicators", FALSE, "check_change_history_indicators");
 	stash_group_add_toggle_button(group, &editor_prefs.autocomplete_doc_words,
 		"autocomplete_doc_words", FALSE, "check_autocomplete_doc_words");
 	stash_group_add_toggle_button(group, &editor_prefs.completion_drops_rest_of_word,
@@ -1320,14 +1325,12 @@ static gboolean open_session_file(gchar **tmp, guint len)
  * for all files opened within this function */
 void configuration_open_files(GPtrArray *session_files)
 {
-	gint i;
 	gboolean failure = FALSE;
 
 	/* necessary to set it to TRUE for project session support */
 	main_status.opening_session_files++;
 
-	i = file_prefs.tab_order_ltr ? 0 : (session_files->len - 1);
-	while (TRUE)
+	for (guint i = 0; i < session_files->len; i++)
 	{
 		gchar **tmp = g_ptr_array_index(session_files, i);
 		guint len;
@@ -1338,19 +1341,6 @@ void configuration_open_files(GPtrArray *session_files)
 				failure = TRUE;
 		}
 		g_strfreev(tmp);
-
-		if (file_prefs.tab_order_ltr)
-		{
-			i++;
-			if (i >= (gint)session_files->len)
-				break;
-		}
-		else
-		{
-			i--;
-			if (i < 0)
-				break;
-		}
 	}
 
 	g_ptr_array_free(session_files, TRUE);
