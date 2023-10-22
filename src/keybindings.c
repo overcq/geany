@@ -624,10 +624,10 @@ static void init_default_kb(void)
 		0, 0, "switch_compiler", _("Switch to Compiler"), NULL);
 	add_kb(group, GEANY_KEYS_FOCUS_MESSAGES, NULL,
 		0, 0, "switch_messages", _("Switch to Messages"), NULL);
-	add_kb(group, GEANY_KEYS_FOCUS_VTE, NULL,
-		0, 0, "switch_vte", _("Switch to VTE"), NULL);
 	add_kb(group, GEANY_KEYS_FOCUS_DOCCOMTAB, NULL,
 		0, 0, "switch_doccom", _("Switch to Doc-com"), NULL);
+	add_kb(group, GEANY_KEYS_FOCUS_VTE, NULL,
+		0, 0, "switch_vte", _("Switch to VTE"), NULL);
 	add_kb(group, GEANY_KEYS_FOCUS_SIDEBAR, NULL,
 		0, 0, "switch_sidebar", _("Switch to Sidebar"), NULL);
 	add_kb(group, GEANY_KEYS_FOCUS_SIDEBAR_SYMBOL_LIST, NULL,
