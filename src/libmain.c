@@ -819,11 +819,11 @@ static void open_cl_files(gint argc, gchar **argv)
 #endif
 		if (filename && ! main_handle_filename(filename))
 		{
-			const gchar *msg = _("Could not find file '%s'.");
+			gchar *msg = g_strdup_printf(_("Could not find file '%s'."), filename);
 
-			g_printerr(msg, filename);	/* also print to the terminal */
-			g_printerr("\n");
-			ui_set_statusbar(TRUE, msg, filename);
+			g_printerr("%s\n", msg);	/* also print to the terminal */
+			ui_set_statusbar(TRUE, "%s", msg);
+			g_free(msg);
 		}
 		g_free(filename);
 	}
@@ -1056,6 +1056,8 @@ gint main_lib(gint argc, gchar **argv)
 	{   const char *message = _( "Configuration directory could not be created (%s)." );
 		ui_set_statusbar( TRUE, message, g_strerror( config_dir_result ));
 		g_warning( message, g_strerror( config_dir_result ));
+		g_warning("%s", message);
+		g_free(message);
 	}
 #ifdef HAVE_SOCKET
 	if (socket_info.lock_socket == -1)
