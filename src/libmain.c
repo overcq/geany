@@ -164,7 +164,7 @@ E_main_I_setup_window_position( void
 	&& ui_prefs.geometry[0] != -1
 	&& ui_prefs.geometry[1] != -1
 	)
-			gtk_window_move( GTK_WINDOW( main_widgets.window ), ui_prefs.geometry[0], ui_prefs.geometry[1] );
+		gtk_window_move( GTK_WINDOW( main_widgets.window ), ui_prefs.geometry[0], ui_prefs.geometry[1] );
 }
 
 
