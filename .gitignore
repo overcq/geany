@@ -8,6 +8,7 @@
 *.so
 *.dll
 *.exe
+*.orig
 deps.mak
 .deps/
 .libs/
