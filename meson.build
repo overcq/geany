@@ -168,7 +168,7 @@ cdata.set_quoted('REVISION', revision)
 
 python_command = get_option('python-command')
 if python_command == '' or python_command == 'auto'
-	if target_machine.system() == 'windows'
+	if host_machine.system() == 'windows'
 		python_command = 'py'
 	else
 		python_command = 'python'
@@ -213,7 +213,7 @@ endforeach
 geany_cflags = def_cflags
 have_gcc4_visibility = cc.has_argument('-fvisibility=hidden')
 geany_cflags += '-DGEANY_PRIVATE'
-if target_machine.system() == 'windows'
+if host_machine.system() == 'windows'
 	geany_cflags += '-DGEANY_EXPORT_SYMBOL=__declspec(dllexport)'
 elif have_gcc4_visibility
 	geany_cflags += '-fvisibility=hidden'
@@ -660,6 +660,7 @@ ctags = static_library('ctags',
 	'ctags/parsers/markdown.h',
 	'ctags/parsers/nsis.c',
 	'ctags/parsers/objc.c',
+	'ctags/parsers/ocaml.c',
 	'ctags/parsers/pascal.c',
 	'ctags/parsers/perl.c',
 	'ctags/parsers/perl.h',
@@ -727,7 +728,10 @@ gen_src = custom_target('gen-signallist',
 
 win_src = []
 win_deps = []
+win_resc = []
 if (host_machine.system() == 'windows')
+	windows = import('windows')
+	win_resc = windows.compile_resources('geany_private.rc')
 	win_src += [ 'src/win32.c', 'src/win32.h' ]
 	foreach lib : ['ole32', 'wsock32', 'comdlg32']
 		win_deps += cc.find_library(lib)
@@ -881,6 +885,7 @@ dep_libgeany = declare_dependency(
 )
 
 executable('geany',
+	win_resc,
 	'src/main.c',
 	link_with: libgeany,
 	c_args: geany_cflags + [ '-DG_LOG_DOMAIN="Geany"' ],
