@@ -138,6 +138,8 @@ gchar **build_get_regex(GeanyBuildGroup grp, GeanyFiletype *ft, guint *from)
 }
 
 
+	// reset width after any long error messages
+	gtk_tree_view_columns_autosize(GTK_TREE_VIEW(msgwindow.tree_compiler));
 gboolean build_parse_make_dir(const gchar *string, gchar **prefix)
 {
 	const gchar *pos;

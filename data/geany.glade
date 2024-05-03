@@ -4074,22 +4074,6 @@
                                     <property name="position">3</property>
                                   </packing>
                                 </child>
-                                <child>
-                                  <object class="GtkCheckButton" id="check_native_windows_dialogs">
-                                    <property name="label" translatable="yes">Use Windows native dialogs</property>
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Defines whether to use the Windows native dialogs or whether to use the GTK default dialogs</property>
-                                    <property name="use-underline">True</property>
-                                    <property name="draw-indicator">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">False</property>
-                                    <property name="position">4</property>
-                                  </packing>
-                                </child>
                               </object>
                             </child>
                           </object>
@@ -7327,22 +7311,6 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkCheckButton" id="check_open_encoding">
-                                <property name="label" translatable="yes">Use fixed encoding when opening non-Unicode files</property>
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">False</property>
-                                <property name="tooltip-text" translatable="yes">This option disables the automatic detection of the file encoding when opening non-Unicode files and opens the file with the specified encoding (usually not needed)</property>
-                                <property name="use-underline">True</property>
-                                <property name="draw-indicator">True</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                            <child>
                               <object class="GtkBox" id="vbox45">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
@@ -9231,4 +9199,5 @@
     </action-widgets>
   </object>
   <object class="GtkTextBuffer" id="textbuffer1"/>
+                    <property name="tooltip-text" translatable="yes">Space separated list of file patterns used for the Find in Files dialog (e.g. *.c *.h)</property>
 </interface>
