@@ -187,18 +187,6 @@ E_project_I_open_directory( void
             }
             g_ptr_array_add( current_array, g_pattern_spec_new(line) );
             g_free(line);
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_native_new(_("Open Project"),
-			GTK_WINDOW(main_widgets.window), GTK_FILE_CHOOSER_ACTION_OPEN, NULL, NULL));
-	else
-	{
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(_("Open Project"), GTK_WINDOW(main_widgets.window),
-	}
-
-	gtk_file_chooser_set_select_multiple(dialog, TRUE);
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_native_new(_("Choose Project Base Path"),
-			NULL, GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, NULL, NULL));
-	else
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(_("Choose Project Base Path"),
         }
         g_object_unref( data_stream );
         if(error)
@@ -293,12 +281,6 @@ No_glob:            ;GFileEnumerator *dir_enum;
                     {   if( error->code == G_IO_ERROR_NOT_FOUND )
                         {   g_clear_error( &error );
                             goto Dir_not_found;
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_native_new(_("Choose Project Filename"),
-			NULL, GTK_FILE_CHOOSER_ACTION_SAVE, NULL, NULL));
-	else
-	{
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(_("Choose Project Filename"), NULL,
-	}
                         }
                         if( !no_glob )
                         {   if( dir_enums[ dir_names_i - 1 ] )

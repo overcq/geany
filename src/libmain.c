@@ -1059,7 +1059,6 @@ gint main_lib(gint argc, gchar **argv)
 		ui_set_statusbar( TRUE, message, g_strerror( config_dir_result ));
 		g_warning( message, g_strerror( config_dir_result ));
 		g_warning("%s", message);
-		g_free(message);
 	}
 #ifdef HAVE_SOCKET
 	if (socket_info.lock_socket == -1)
@@ -1279,8 +1278,7 @@ gboolean main_quit(void)
 		if (do_main_quit())
 			return TRUE;
 	}
-	else
-	if (! prefs.confirm_exit ||
+	else if (! prefs.confirm_exit ||
 		dialogs_show_question_full(NULL, GTK_STOCK_QUIT, GTK_STOCK_CANCEL, NULL,
 			_("Do you really want to quit?")))
 	{

@@ -138,8 +138,6 @@ gchar **build_get_regex(GeanyBuildGroup grp, GeanyFiletype *ft, guint *from)
 }
 
 
-	// reset width after any long error messages
-	gtk_tree_view_columns_autosize(GTK_TREE_VIEW(msgwindow.tree_compiler));
 gboolean build_parse_make_dir(const gchar *string, gchar **prefix)
 {
 	const gchar *pos;
@@ -248,7 +246,6 @@ E_compile_I_exec_Q_stdout_X_watch( GIOChannel *src
     {   g_io_channel_shutdown( E_compile_S_channel_out, false, NULL );
         g_io_channel_unref( E_compile_S_channel_out );
         return false;
-			bc->command);
     }
     int nl_length;
     g_io_channel_get_line_term( E_compile_S_channel_out, &nl_length );
@@ -270,8 +267,6 @@ E_compile_I_exec_Q_stdout_X_watch( GIOChannel *src
                 E_compile_I_exec_X_watch_S_log_Z_compiler = true;
             }
             g_free(s);
-		gtk_window_set_title(GTK_WINDOW(dialog), str);
-		g_free(str);
         }
     }
     return true;

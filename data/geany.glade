@@ -9215,5 +9215,4 @@
     </action-widgets>
   </object>
   <object class="GtkTextBuffer" id="textbuffer1"/>
-                    <property name="tooltip-text" translatable="yes">Space separated list of file patterns used for the Find in Files dialog (e.g. *.c *.h)</property>
 </interface>
