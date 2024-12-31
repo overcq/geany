@@ -768,25 +768,64 @@ static TMParserMapEntry map_ABC[] = {
 };
 #define group_ABC group_REST
 
+#define COMMON_VERILOG \
+	{'c', tm_tag_field_t},      /* constant */ \
+	{'d', tm_tag_macro_t},      /* define   */ \
+	{'e', tm_tag_variable_t},   /* event    */ \
+	{'f', tm_tag_function_t},   /* function */ \
+	{'m', tm_tag_prototype_t},  /* module   */ \
+	{'n', tm_tag_variable_t},   /* net      */ \
+	{'p', tm_tag_externvar_t},  /* port     */ \
+	{'r', tm_tag_variable_t},   /* register */ \
+	{'t', tm_tag_function_t},   /* task     */ \
+	{'b', tm_tag_namespace_t},  /* block    */ \
+	{'i', tm_tag_enumerator_t}, /* instance */
+
 static TMParserMapEntry map_VERILOG[] = {
-	{'c', tm_tag_variable_t},  // constant
-	{'d', tm_tag_variable_t},  // define
-	{'e', tm_tag_typedef_t},   // event
-	{'f', tm_tag_function_t},  // function
-	{'m', tm_tag_class_t},     // module
-	{'n', tm_tag_variable_t},  // net
-	{'p', tm_tag_variable_t},  // port
-	{'r', tm_tag_variable_t},  // register
-	{'t', tm_tag_function_t},  // task
-	{'b', tm_tag_undef_t},     // block
-	{'i', tm_tag_undef_t},     // instance
+	COMMON_VERILOG
 };
 static TMParserMapGroup group_VERILOG[] = {
-	{N_("Events"), TM_ICON_MACRO, tm_tag_typedef_t},
-	{N_("Modules"), TM_ICON_CLASS, tm_tag_class_t},
+	/* Verilog and SystemVerilog */
+	{N_("Modules"), TM_ICON_CLASS, tm_tag_prototype_t},
+	{N_("Instances"), TM_ICON_OTHER, tm_tag_enumerator_t},
+	{N_("Blocks"), TM_ICON_NAMESPACE, tm_tag_namespace_t},
 	{N_("Functions / Tasks"), TM_ICON_METHOD, tm_tag_function_t},
-	{N_("Variables"), TM_ICON_VAR, tm_tag_variable_t},
+	{N_("Macros"), TM_ICON_MACRO, tm_tag_macro_t},
+	{N_("Parameters / Constants"), TM_ICON_MACRO, tm_tag_field_t},
+	{N_("Ports"), TM_ICON_MEMBER, tm_tag_externvar_t},
+	{N_("Signals"), TM_ICON_VAR, tm_tag_variable_t},
+	/* SystemVerilog only */
+	{N_("Classes"), TM_ICON_STRUCT, tm_tag_class_t},
+	{N_("Interfaces"), TM_ICON_STRUCT, tm_tag_interface_t | tm_tag_union_t},
+	{N_("Package"), TM_ICON_NAMESPACE, tm_tag_package_t},
+	{N_("Members"), TM_ICON_MEMBER, tm_tag_member_t},
+	{N_("Structs / Unions / Enums"), TM_ICON_OTHER, tm_tag_struct_t | tm_tag_enum_t},
+	{N_("Typedefs"), TM_ICON_STRUCT, tm_tag_typedef_t},
 };
+
+static TMParserMapEntry map_SYSVERILOG[] = {
+	COMMON_VERILOG
+	{'A', tm_tag_undef_t},     // assert
+	{'C', tm_tag_class_t},     // class
+	{'V', tm_tag_undef_t},     // covergroup
+	{'E', tm_tag_enum_t},      // enum
+	{'I', tm_tag_interface_t}, // interface
+	{'M', tm_tag_union_t},     // modport
+	{'K', tm_tag_package_t},   // package
+	{'P', tm_tag_prototype_t}, // program
+	{'Q', tm_tag_function_t},  // prototype
+	{'R', tm_tag_undef_t},     // property
+	{'S', tm_tag_struct_t},    // struct
+	{'T', tm_tag_typedef_t},   // typedef
+	{'H', tm_tag_undef_t},     // checker
+	{'L', tm_tag_undef_t},     // clocking
+	{'q', tm_tag_undef_t},     // sequence
+	{'w', tm_tag_member_t},    // member
+	{'l', tm_tag_class_t},     // ifclass
+	{'O', tm_tag_undef_t},     // constraint
+	{'N', tm_tag_typedef_t},   // nettype
+};
+#define group_SYSVERILOG group_VERILOG
 
 static TMParserMapEntry map_R[] = {
 	{'f', tm_tag_function_t},  // function
@@ -1169,6 +1208,40 @@ static TMParserMapGroup group_LDSCRIPT[] = {
 	{"unused", TM_ICON_NONE, tm_tag_undef_t},
 };
 
+static TMParserMapEntry map_FORTH[] = {
+	{'w', tm_tag_function_t},  // word
+	{'v', tm_tag_variable_t},  // variable
+	{'c', tm_tag_macro_t},     // constant
+};
+static TMParserMapGroup group_FORTH[] = {
+	{N_("Words"), TM_ICON_METHOD, tm_tag_function_t},
+	{N_("Variables"), TM_ICON_VAR, tm_tag_variable_t},
+	{N_("Constants"), TM_ICON_MACRO, tm_tag_macro_t},
+};
+
+static TMParserMapEntry map_MESON[] = {
+	{'P', tm_tag_namespace_t},   // project
+	{'V', tm_tag_local_var_t},   // variable
+	{'S', tm_tag_macro_t},       // subdir
+	{'B', tm_tag_other_t},       // build
+	{'c', tm_tag_enumerator_t},  // custom
+	{'t', tm_tag_field_t},       // test
+	{'b', tm_tag_function_t},    // benchmark
+	{'r', tm_tag_member_t},      // run
+	{'m', tm_tag_package_t},     // module
+};
+static TMParserMapGroup group_MESON[] = {
+	{N_("Projects"), TM_ICON_CLASS, tm_tag_namespace_t},
+	{N_("Modules"), TM_ICON_NAMESPACE, tm_tag_package_t},
+	{N_("Variables"), TM_ICON_NONE, tm_tag_local_var_t},
+	{N_("Subdirs"), TM_ICON_OTHER, tm_tag_macro_t},
+	{N_("Build Targets"), TM_ICON_METHOD, tm_tag_other_t},
+	{N_("Custom Targets"), TM_ICON_METHOD, tm_tag_enumerator_t},
+	{N_("Benchmark Targets"), TM_ICON_METHOD, tm_tag_function_t},
+	{N_("Run Targets"), TM_ICON_METHOD, tm_tag_member_t},
+	{N_("Tests"), TM_ICON_NONE, tm_tag_field_t},
+};
+
 typedef struct
 {
     TMParserMapEntry *entries;
@@ -1244,6 +1317,9 @@ static TMParserMap parser_map[] = {
 	MAP_ENTRY(RAKU),
 	MAP_ENTRY(OCAML),
 	MAP_ENTRY(LDSCRIPT),
+	MAP_ENTRY(FORTH),
+	MAP_ENTRY(MESON),
+	MAP_ENTRY(SYSVERILOG),
 };
 /* make sure the parser map is consistent and complete */
 G_STATIC_ASSERT(G_N_ELEMENTS(parser_map) == TM_PARSER_COUNT);
@@ -1573,6 +1649,9 @@ gboolean tm_parser_enable_role(TMParserType lang, gchar kind)
 			 * tags and we can't tell which is which just by kind. By disabling
 			 * roles for this kind, we only get package definition tags. */
 			return kind != 'p';
+		case TM_PARSER_VERILOG:
+		case TM_PARSER_SYSVERILOG:
+			return kind != 'm';
 	}
 	return TRUE;
 }
@@ -1775,6 +1854,7 @@ gboolean tm_parser_has_full_scope(TMParserType lang)
 		case TM_PARSER_VALA:
 		case TM_PARSER_VHDL:
 		case TM_PARSER_VERILOG:
+		case TM_PARSER_SYSVERILOG:
 		case TM_PARSER_ZEPHIR:
 		case TM_PARSER_AUTOIT:
 			return TRUE;

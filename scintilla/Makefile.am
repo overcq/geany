@@ -28,6 +28,7 @@ lexilla/lexers/LexCaml.cxx             \
 lexilla/lexers/LexCmake.cxx            \
 lexilla/lexers/LexCoffeeScript.cxx     \
 lexilla/lexers/LexD.cxx                \
+lexilla/lexers/LexDart.cxx             \
 lexilla/lexers/LexDiff.cxx             \
 lexilla/lexers/LexErlang.cxx           \
 lexilla/lexers/LexForth.cxx            \
@@ -43,6 +44,7 @@ lexilla/lexers/LexMake.cxx             \
 lexilla/lexers/LexMarkdown.cxx         \
 lexilla/lexers/LexMatlab.cxx           \
 lexilla/lexers/LexNim.cxx              \
+lexilla/lexers/LexNix.cxx              \
 lexilla/lexers/LexNsis.cxx             \
 lexilla/lexers/LexNull.cxx             \
 lexilla/lexers/LexPascal.cxx           \
@@ -62,7 +64,8 @@ lexilla/lexers/LexTxt2tags.cxx         \
 lexilla/lexers/LexVHDL.cxx             \
 lexilla/lexers/LexVerilog.cxx          \
 lexilla/lexers/LexVisualProlog.cxx     \
-lexilla/lexers/LexYAML.cxx
+lexilla/lexers/LexYAML.cxx             \
+lexilla/lexers/LexZig.cxx
 
 LEXLIB_SRCS =                          \
 lexilla/include/Lexilla.h              \

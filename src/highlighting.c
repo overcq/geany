@@ -1014,6 +1014,7 @@ void highlighting_init_styles(guint filetype_idx, GKeyFile *config, GKeyFile *co
 		init_styleset_case(CONF);
 		init_styleset_case(CSS);
 		init_styleset_case(D);
+		init_styleset_case(DART);
 		init_styleset_case(DIFF);
 		init_styleset_case(LISP);
 		init_styleset_case(ERLANG);
@@ -1036,6 +1037,7 @@ void highlighting_init_styles(guint filetype_idx, GKeyFile *config, GKeyFile *co
 		init_styleset_case(MATLAB);
 		init_styleset_case(MARKDOWN);
 		init_styleset_case(NIM);
+		init_styleset_case(NIX);
 		init_styleset_case(NSIS);
 		init_styleset_case(OBJECTIVEC);
 		init_styleset_case(PASCAL);
@@ -1059,6 +1061,7 @@ void highlighting_init_styles(guint filetype_idx, GKeyFile *config, GKeyFile *co
 		init_styleset_case(XML);
 		init_styleset_case(YAML);
 		init_styleset_case(ZEPHIR);
+		init_styleset_case(ZIG);
 		default:
 			if (ft->lexer_filetype)
 				geany_debug("Filetype %s has a recursive lexer_filetype %s set!",
@@ -1110,6 +1113,7 @@ void highlighting_set_styles(ScintillaObject *sci, GeanyFiletype *ft)
 		styleset_case(CONF);
 		styleset_case(CSS);
 		styleset_case(D);
+		styleset_case(DART);
 		styleset_case(DIFF);
 		styleset_case(LISP);
 		styleset_case(ERLANG);
@@ -1132,6 +1136,7 @@ void highlighting_set_styles(ScintillaObject *sci, GeanyFiletype *ft)
 		styleset_case(MARKDOWN);
 		styleset_case(MATLAB);
 		styleset_case(NIM);
+		styleset_case(NIX);
 		styleset_case(NSIS);
 		styleset_case(OBJECTIVEC);
 		styleset_case(PASCAL);
@@ -1155,6 +1160,7 @@ void highlighting_set_styles(ScintillaObject *sci, GeanyFiletype *ft)
 		styleset_case(XML);
 		styleset_case(YAML);
 		styleset_case(ZEPHIR);
+		styleset_case(ZIG);
 		case GEANY_FILETYPES_NONE:
 		default:
 			styleset_default(sci, ft->id);
@@ -1685,6 +1691,27 @@ gboolean highlighting_is_string_style(gint lexer, gint style)
 				style == SCE_NIM_TRIPLE ||
 				style == SCE_NIM_TRIPLEDOUBLE ||
 				style == SCE_NIM_STRINGEOL);
+
+		case SCLEX_ZIG:
+			return (style == SCE_ZIG_STRING ||
+				style == SCE_ZIG_MULTISTRING ||
+				style == SCE_ZIG_CHARACTER ||
+				style == SCE_ZIG_ESCAPECHAR);
+
+		case SCLEX_DART:
+			return (style == SCE_DART_STRING_SQ ||
+				style == SCE_DART_STRING_DQ ||
+				style == SCE_DART_TRIPLE_STRING_SQ ||
+				style == SCE_DART_TRIPLE_STRING_DQ ||
+				style == SCE_DART_RAWSTRING_SQ ||
+				style == SCE_DART_RAWSTRING_DQ ||
+				style == SCE_DART_TRIPLE_RAWSTRING_SQ ||
+				style == SCE_DART_TRIPLE_RAWSTRING_DQ);
+
+		case SCLEX_NIX:
+			return (style == SCE_NIX_STRING ||
+				style == SCE_NIX_STRING_MULTILINE ||
+				style == SCE_NIX_ESCAPECHAR);
 	}
 	return FALSE;
 }
@@ -1937,6 +1964,21 @@ gboolean highlighting_is_comment_style(gint lexer, gint style)
 				style == SCE_NIM_COMMENTDOC ||
 				style == SCE_NIM_COMMENTLINE ||
 				style == SCE_NIM_COMMENTLINEDOC);
+
+		case SCLEX_ZIG:
+			return (style == SCE_ZIG_COMMENTLINE ||
+				style == SCE_ZIG_COMMENTLINEDOC ||
+				style == SCE_ZIG_COMMENTLINETOP);
+
+		case SCLEX_DART:
+			return (style == SCE_DART_COMMENTLINE ||
+				style == SCE_DART_COMMENTLINEDOC ||
+				style == SCE_DART_COMMENTBLOCK ||
+				style == SCE_DART_COMMENTBLOCKDOC);
+
+		case SCLEX_NIX:
+			return (style == SCE_NIX_COMMENTLINE ||
+				style == SCE_NIX_COMMENTBLOCK);
 	}
 	return FALSE;
 }
