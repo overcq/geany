@@ -195,14 +195,6 @@ char *Q_action_S_build_target[] =
 , "clean"
 , "distclean"
 , "maintainer-clean"
-		gchar *str;
-		bc = get_build_cmd(doc, grp, cmd, NULL);
-		str = g_strdup_printf(_("Enter custom text to append to the command \"%s\":"),
-			bc->command);
-			gtk_label_set_label(GTK_LABEL(ui_lookup_widget(dialog, "label")), str);
-		SETPTR(str, utils_str_remove_chars(g_strdup(bc->label), "_"));
-		gtk_window_set_title(GTK_WINDOW(dialog), str);
-		g_free(str);
 };
 static GMutex Q_action_S_mutex;
 static GIOChannel *E_compile_S_channel_out, *E_compile_S_channel_err;
@@ -254,7 +246,6 @@ E_compile_I_exec_Q_stdout_X_watch( GIOChannel *src
     {   g_io_channel_shutdown( E_compile_S_channel_out, false, NULL );
         g_io_channel_unref( E_compile_S_channel_out );
         return false;
-			bc->command);
     }
     int nl_length;
     g_io_channel_get_line_term( E_compile_S_channel_out, &nl_length );
@@ -276,8 +267,6 @@ E_compile_I_exec_Q_stdout_X_watch( GIOChannel *src
                 E_compile_I_exec_X_watch_S_log_Z_compiler = true;
             }
             g_free(s);
-		gtk_window_set_title(GTK_WINDOW(dialog), str);
-		g_free(str);
         }
     }
     return true;

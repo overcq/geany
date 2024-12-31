@@ -58,15 +58,6 @@ E_project_I_open_directory_I_hash_free( void *p
       unsigned priority_1;
     } *hash_e = p;
     g_ptr_array_unref( hash_e->globs );
-			if (GTK_IS_WIDGET(dialog))
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_native_new(_("Open Project"),
-			GTK_WINDOW(main_widgets.window), GTK_FILE_CHOOSER_ACTION_OPEN, NULL, NULL));
-	else
-	{
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(_("Open Project"), GTK_WINDOW(main_widgets.window),
-	}
-
-	gtk_file_chooser_set_select_multiple(dialog, TRUE);
 }
 static
 int
@@ -97,10 +88,6 @@ E_project_I_open_directory_I_slist_free1( void *p
       unsigned priority_1, priority_2, priority_3;
     } *slist_e = p;
     g_free( slist_e->path );
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_native_new(_("Choose Project Base Path"),
-			NULL, GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, NULL, NULL));
-	else
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(_("Choose Project Base Path"),
 }
 //------------------------------------------------------------------------------
 static
@@ -200,18 +187,6 @@ E_project_I_open_directory( void
             }
             g_ptr_array_add( current_array, g_pattern_spec_new(line) );
             g_free(line);
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_native_new(_("Open Project"),
-			GTK_WINDOW(main_widgets.window), GTK_FILE_CHOOSER_ACTION_OPEN, NULL, NULL));
-	else
-	{
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(_("Open Project"), GTK_WINDOW(main_widgets.window),
-	}
-
-	gtk_file_chooser_set_select_multiple(dialog, TRUE);
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_native_new(_("Choose Project Base Path"),
-			NULL, GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, NULL, NULL));
-	else
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(_("Choose Project Base Path"),
         }
         g_object_unref( data_stream );
         if(error)
@@ -306,18 +281,6 @@ No_glob:            ;GFileEnumerator *dir_enum;
                     {   if( error->code == G_IO_ERROR_NOT_FOUND )
                         {   g_clear_error( &error );
                             goto Dir_not_found;
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_native_new(_("Choose Project Filename"),
-			NULL, GTK_FILE_CHOOSER_ACTION_SAVE, NULL, NULL));
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_native_new(_("Choose Project Filename"),
-			NULL, GTK_FILE_CHOOSER_ACTION_SAVE, NULL, NULL));
-	else
-	{
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(_("Choose Project Filename"), NULL,
-	}
-	else
-	{
-		dialog = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new(_("Choose Project Filename"), NULL,
-	}
                         }
                         if( !no_glob )
                         {   if( dir_enums[ dir_names_i - 1 ] )
@@ -372,18 +335,6 @@ No_glob:            ;GFileEnumerator *dir_enum;
                                     slist_e->priority_3 = ~0U >> 1;
                                     files = g_slist_insert_sorted_with_data( files, slist_e, ( void * )E_project_I_open_directory_I_files_slist_cmp, 0 );
                                     break;
-		/* Opening another project while some project is already opene causes
-		 * that upon closing the first project, empty session is saved here.
-		 * The check below prevents that but has a side-effect that when
-		 * save_config_on_file_change=FALSE, the session with all closed files
-		 * isn't saved when opening a project. */
-		if (have_session_docs())
-		/* Opening another project while some project is already opene causes
-		 * that upon closing the first project, empty session is saved here.
-		 * The check below prevents that but has a side-effect that when
-		 * save_config_on_file_change=FALSE, the session with all closed files
-		 * isn't saved when opening a project. */
-		if (have_session_docs())
                                 }
                             }
                         }
