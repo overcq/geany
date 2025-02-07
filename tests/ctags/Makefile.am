@@ -318,6 +318,7 @@ test_sources = \
 	simple.lisp						\
 	simple.lua						\
 	simple.mak						\
+	simple.Meson_unittest			\
 	simple.md						\
 	simple.ml						\
 	simple.php						\
@@ -327,6 +328,7 @@ test_sources = \
 	simple.raku						\
 	simple.rb						\
 	simple.rst						\
+	simple.scss						\
 	simple.sh						\
 	simple.tcl						\
 	simple.ts						\

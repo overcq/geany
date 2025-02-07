@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdlib>
+#include <cstdint>
 #include <cstring>
 #include <cstdio>
 #include <cmath>
@@ -36,6 +37,7 @@
 
 #include "Scintilla.h"
 #include "ScintillaWidget.h"
+#include "CharacterType.h"
 #include "XPM.h"
 #include "UniConversion.h"
 
@@ -99,6 +101,8 @@ public:
 			pango_font_description_set_size(fd.get(), pango_units_from_double(fp.size));
 			pango_font_description_set_weight(fd.get(), static_cast<PangoWeight>(fp.weight));
 			pango_font_description_set_style(fd.get(), fp.italic ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL);
+			pango_font_description_set_stretch(fd.get(),
+				static_cast<PangoStretch>(static_cast<int>(fp.stretch)-1));
 		}
 	}
 	~FontHandle() override = default;
@@ -1085,6 +1089,27 @@ void SurfaceImpl::MeasureWidthsUTF8(const Font *font_, std::string_view text, XY
 		}
 		while (!iti.finished) {
 			iti.Next();
+			if (iti.curIndex < i) {
+				// Backwards movement indicater bidirectional.
+				// Divide into ASCII prefix and non-ASCII suffix as this is common case
+				// and produces accurate positions for the ASCII prefix.
+				size_t lenASCII=0;
+				while (lenASCII<text.length() && IsASCII(text[lenASCII])) {
+					lenASCII++;
+				}
+				const std::string_view asciiPrefix = text.substr(0, lenASCII);
+				const std::string_view bidiSuffix = text.substr(lenASCII);
+				// Recurse for ASCII prefix.
+				MeasureWidthsUTF8(font_, asciiPrefix, positions);
+				// Measure the whole bidiSuffix and spread its width evenly
+				const XYPOSITION endASCII = positions[lenASCII-1];
+				const XYPOSITION widthBidi = WidthText(font_, bidiSuffix);
+				const XYPOSITION widthByteBidi = widthBidi / bidiSuffix.length();
+				for (size_t bidiPos=0; bidiPos<bidiSuffix.length(); bidiPos++) {
+					positions[bidiPos+lenASCII] = endASCII + widthByteBidi * (bidiPos + 1);
+				}
+				return;
+			}
 			const int places = iti.curIndex - i;
 			while (i < iti.curIndex) {
 				// Evenly distribute space among bytes of this cluster.
@@ -1321,7 +1346,13 @@ void Window::SetCursor(Cursor curs) {
 		gdkCurs = gdk_cursor_new_for_display(pdisplay, GDK_HAND2);
 		break;
 	case Cursor::reverseArrow:
+#ifdef G_OS_WIN32
+		// GDK_RIGHT_PTR is scaled incorrectly under Windows with HiDPI screens (GTK 3.24);
+		// GDK_HAND2 is mapped to a native Windows cursor by GTK
+		gdkCurs = gdk_cursor_new_for_display(pdisplay, GDK_HAND2);
+#else
 		gdkCurs = gdk_cursor_new_for_display(pdisplay, GDK_RIGHT_PTR);
+#endif
 		break;
 	default:
 		gdkCurs = gdk_cursor_new_for_display(pdisplay, GDK_LEFT_PTR);
@@ -1331,7 +1362,8 @@ void Window::SetCursor(Cursor curs) {
 
 	if (WindowFromWidget(PWidget(wid)))
 		gdk_window_set_cursor(WindowFromWidget(PWidget(wid)), gdkCurs);
-	UnRefCursor(gdkCurs);
+	if (gdkCurs)
+		UnRefCursor(gdkCurs);
 }
 
 /* Returns rectangle of monitor pt is on, both rect and pt are in Window's
@@ -2149,7 +2181,7 @@ ColourRGBA Platform::Chrome() {
 }
 
 ColourRGBA Platform::ChromeHighlight() {
-	return ColourRGBA(0xff, 0xff, 0xff);
+	return white;
 }
 
 const char *Platform::DefaultFont() {
