@@ -105,8 +105,6 @@ static GeanyFiletypeGroupID get_group(const gchar *name)
 
 static GeanyFiletypeGroupID get_filetype_group(const gchar *title, const gchar *name)
 {
-	GeanyFiletypeGroupID ret;
-
 	if (g_strcmp0(name, "None") == 0)
 		return GEANY_FILETYPE_GROUP_NONE;
 
@@ -214,6 +212,7 @@ static void init_builtin_filetypes(void)
 	FT_INIT( ZIG,          NONE,         "Zig",              NULL                      );
 	FT_INIT( DART,         NONE,         "Dart",             NULL                      );
 	FT_INIT( NIX,          NONE,         "Nix",              NULL                      );
+	FT_INIT( TOML,         CONF,         "TOML",             NULL                      );
 }
 
 
