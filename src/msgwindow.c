@@ -171,6 +171,27 @@ Cont_line:  sttf.chrg.cpMin = cnt_end + editor_get_eol_char_len( document->edito
         char *s = sci_get_contents_range( sci, sttf.chrgText.cpMax, cnt_end );
         char *p = s;
         gunichar u;
+        if( line < 2
+        && !strncmp( p, "-*-", 3 )
+        )
+        {	p += 3;
+			while(( u = g_utf8_get_char(p) )
+			&& g_unichar_isalnum(u)
+			)
+				p = g_utf8_next_char(p);
+			if( u
+			&& !strncmp( p, "-*-", 3 )
+			)
+			{	p += 3;
+				while(( u = g_utf8_get_char(p) )
+				&& g_unichar_isspace(u)
+				)
+					p = g_utf8_next_char(p);
+				if( sttf.chrgText.cpMax + ( p - s ) == cnt_end )
+					goto Next_s;
+			}
+			p = s;
+		}
         _Bool type_doc = false;
         if( rep_bind )
         {   u = g_utf8_get_char(p);
