@@ -1059,7 +1059,7 @@ gint main_lib(gint argc, gchar **argv)
 	filetypes_init();
 	templates_init();
 	navqueue_init();
-	document_init_doclist();
+	document_init();
 	symbols_init();
 	editor_snippets_init();
 

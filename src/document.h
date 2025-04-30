@@ -117,6 +117,8 @@ typedef struct GeanyDocument
 	 * @c 0 is reserved as an unused value.
 	 * @see document_find_by_id(). */
 	guint			 id;
+	int64_t last_save_time;
+	unsigned activate_timeout;
 
 	struct GeanyDocumentPrivate *priv;	/* should be last, append fields before this item */
 }
@@ -241,7 +243,7 @@ GeanyDocument *document_find_by_sci(ScintillaObject *sci);
 void document_show_tab(GeanyDocument *doc);
 void document_show_tab_idle(GeanyDocument *doc);
 
-void document_init_doclist(void);
+void document_init(void);
 
 void document_finalize(void);
 

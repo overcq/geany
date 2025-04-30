@@ -85,6 +85,9 @@
 
 GeanyFilePrefs file_prefs;
 GPtrArray *documents_array = NULL;
+static unsigned E_document_Q_autosave_S_timeout;
+const unsigned E_document_Q_autosave_S_delay = 1000;
+const unsigned E_document_Q_autosave_S_activate_delay = 10;
 
 
 /* an undo action, also used for redo actions */
@@ -373,19 +376,52 @@ GeanyDocument *document_get_current(void)
 }
 
 
-void document_init_doclist(void)
-{
-	documents_array = g_ptr_array_new();
+static
+gboolean
+E_document_Q_autosave_I_timeout( void *p
+){	int64_t current_time = g_get_monotonic_time();
+	int64_t next_time = current_time + E_document_Q_autosave_S_delay * 1000000;
+	unsigned i;
+	foreach_document(i)
+		if( documents[i]->file_name )
+		{	int64_t document_next_time = documents[i]->last_save_time + E_document_Q_autosave_S_delay * 1000000;
+			if( document_next_time <= current_time )
+			{	document_save_file( documents[i], FALSE );
+				documents[i]->last_save_time = current_time;
+			}else if( next_time > document_next_time )
+				next_time = document_next_time;
+		}
+	E_document_Q_autosave_S_timeout = g_timeout_add_seconds(( next_time - current_time ) / 1000000, E_document_Q_autosave_I_timeout, 0 );
+	return G_SOURCE_REMOVE;
 }
 
 
-void document_finalize(void)
-{
-	guint i;
+static
+void
+E_document_X_save( GObject *obj
+, GeanyDocument *doc
+, void *data
+){	g_source_remove( doc->activate_timeout );
+	doc->activate_timeout = 0;
+}
 
-	for (i = 0; i < documents_array->len; i++)
-		g_free(documents[i]);
-	g_ptr_array_free(documents_array, TRUE);
+
+void
+document_init( void
+){	documents_array = g_ptr_array_new();
+	g_signal_connect( geany_object, "document-save", G_CALLBACK( E_document_X_save ), 0 );
+	E_document_Q_autosave_S_timeout = g_timeout_add_seconds( E_document_Q_autosave_S_delay, E_document_Q_autosave_I_timeout, 0 );
+}
+
+
+void
+document_finalize( void
+){	g_source_remove( E_document_Q_autosave_S_timeout );
+	for( unsigned i = 0; i < documents_array->len; i++ )
+	{	g_source_remove( documents[i]->activate_timeout );
+		g_free( documents[i] );
+	}
+	g_ptr_array_free( documents_array, TRUE );
 }
 
 
@@ -574,13 +610,27 @@ static void monitor_file_setup(GeanyDocument *doc)
 	doc->priv->file_disk_status = FILE_OK;
 }
 
+static
+gboolean
+E_document_Q_autosave_X_activate( void *doc
+){	GeanyDocument *document = doc;
+	document->last_save_time = g_get_monotonic_time();
+	document->activate_timeout = 0;
+	return G_SOURCE_REMOVE;
+}
 
 void
 E_document_X_activate( GObject *obj
 , GeanyDocument *doc
 , void *data
 ){  E_doc_com_I_idle_update_M();
+	GeanyDocument *current_document = document_get_current();
+	if( current_document->file_name )
+	{	g_source_remove( doc->activate_timeout );
+		current_document->activate_timeout = g_timeout_add_seconds( E_document_Q_autosave_S_activate_delay, E_document_Q_autosave_X_activate, doc );
+	}
 }
+
 
 void document_try_focus(GeanyDocument *doc, GtkWidget *source_widget)
 {
@@ -672,6 +722,7 @@ gboolean document_close(GeanyDocument *doc)
 	&& gtk_notebook_get_n_pages(( void * )main_widgets.notebook ) == 1
 	)
 		return false;
+	g_source_remove( doc->activate_timeout );
 	return document_remove_page(document_get_notebook_page(doc));
 }
 
@@ -851,6 +902,8 @@ GeanyDocument *document_new_file(const gchar *utf8_filename, GeanyFiletype *ft, 
 #else
 	doc->priv->mtime = 0;
 #endif
+	doc->last_save_time = g_get_monotonic_time();
+	doc->activate_timeout = 0;
 
 	/* "the" SCI signal (connect after initial setup(i.e. adding text)) */
 	g_signal_connect(doc->editor->sci, "sci-notify", G_CALLBACK(editor_sci_notify_cb), doc->editor);
@@ -1456,6 +1509,8 @@ GeanyDocument *document_open_file_full(GeanyDocument *doc, const gchar *filename
 		if (! main_status.opening_session_files)
 			ui_add_recent_document(doc);
 
+        doc->last_save_time = g_get_monotonic_time();
+        doc->activate_timeout = 0;
 		if (reload)
 		{
 			g_signal_emit_by_name(geany_object, "document-reload", doc);

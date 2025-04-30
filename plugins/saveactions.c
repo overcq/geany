@@ -960,6 +960,7 @@ void plugin_init(GeanyData *data)
 
 	enable_autosave = utils_get_setting_boolean(
 		config, "saveactions", "enable_autosave", FALSE);
+	enable_autosave = FALSE;
 	enable_autosave_losing_focus = utils_get_setting_boolean(
 		config, "saveactions", "enable_autosave_losing_focus", FALSE);
 	enable_backupcopy = utils_get_setting_boolean(
@@ -1115,6 +1116,7 @@ static void configure_response_cb(GtkDialog *dialog, gint response, G_GNUC_UNUSE
 
 		enable_autosave = gtk_toggle_button_get_active(
 			GTK_TOGGLE_BUTTON(pref_widgets.checkbox_enable_autosave));
+		enable_autosave = FALSE;
 		enable_autosave_losing_focus = gtk_toggle_button_get_active(
 			GTK_TOGGLE_BUTTON(pref_widgets.checkbox_enable_autosave_losing_focus));
 		enable_instantsave = gtk_toggle_button_get_active(
