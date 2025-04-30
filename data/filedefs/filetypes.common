@@ -103,13 +103,11 @@ whitespace_chars=\s\t!\"#$%&'()*+,-./:;<=>?@[\\]^`{|}~
 #wordchars=_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
 
 [named_styles]
-# This is the Default "built-in" color scheme
 default=0x000000;0xcacaca
-#sprawdzić wartości “true” w:
 error=0xd3d300;0xaf4b4b
 
 selection=;0xc49c9c;;true
-current_line=;0xcecece;false
+current_line=;0xcecece;true
 brace_good=0x5f5f5f
 brace_bad=0xdf0000
 margin_line_number=0x5f5f5f
@@ -149,34 +147,36 @@ keyword_4=keyword_1
 
 identifier=default
 identifier_1=identifier
-identifier_2=identifier_1
-identifier_3=identifier_1
-identifier_4=identifier_1
+identifier_2=identifier
+identifier_3=identifier
+identifier_4=identifier
 
 string=0x5f3700
 string_1=string
-string_2=string_1
+string_2=string
+string_3=string
+string_4=string
 string_eol=0x000000;0xbfaf8f
-character=string_1
-backticks=string_2
-here_doc=string_2
+character=string
+backticks=string
+here_doc=string
 
 label=0x5f0000
 preprocessor=0x002b00
-regex=number_1
+regex=number
 operator=default
-decorator=string_1
+decorator=string
 macro=preprocessor
 other=default
 
 tag=type
 tag_unknown=tag
 tag_end=tag
-attribute=keyword_1
+attribute=keyword
 attribute_unknown=attribute
-value=string_1
+value=string
 entity=default
 
-line_added=0x34b034;0xffffff
-line_removed=0xff2727;0xffffff
-line_changed=0x7f007f;0xffffff
+line_added=type
+line_removed=label
+line_changed=string

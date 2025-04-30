@@ -401,8 +401,10 @@ void
 E_document_X_save( GObject *obj
 , GeanyDocument *doc
 , void *data
-){	g_source_remove( doc->activate_timeout );
-	doc->activate_timeout = 0;
+){	if( doc->activate_timeout )
+	{	g_source_remove( doc->activate_timeout );
+		doc->activate_timeout = 0;
+	}
 }
 
 
@@ -418,7 +420,8 @@ void
 document_finalize( void
 ){	g_source_remove( E_document_Q_autosave_S_timeout );
 	for( unsigned i = 0; i < documents_array->len; i++ )
-	{	g_source_remove( documents[i]->activate_timeout );
+	{	if( documents[i]->activate_timeout )
+			g_source_remove( documents[i]->activate_timeout );
 		g_free( documents[i] );
 	}
 	g_ptr_array_free( documents_array, TRUE );
@@ -626,7 +629,8 @@ E_document_X_activate( GObject *obj
 ){  E_doc_com_I_idle_update_M();
 	GeanyDocument *current_document = document_get_current();
 	if( current_document->file_name )
-	{	g_source_remove( doc->activate_timeout );
+	{	if( doc->activate_timeout )
+			g_source_remove( doc->activate_timeout );
 		current_document->activate_timeout = g_timeout_add_seconds( E_document_Q_autosave_S_activate_delay, E_document_Q_autosave_X_activate, doc );
 	}
 }
@@ -722,7 +726,8 @@ gboolean document_close(GeanyDocument *doc)
 	&& gtk_notebook_get_n_pages(( void * )main_widgets.notebook ) == 1
 	)
 		return false;
-	g_source_remove( doc->activate_timeout );
+	if( doc->activate_timeout )
+		g_source_remove( doc->activate_timeout );
 	return document_remove_page(document_get_notebook_page(doc));
 }
 
