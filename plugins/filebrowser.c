@@ -464,8 +464,14 @@ static void open_external(const gchar *fname, gboolean dir_found)
 	else
 		dir = g_strdup(fname);
 
-	utils_string_replace_all(cmd_str, "%f", fname);
-	utils_string_replace_all(cmd_str, "%d", dir);
+	char *fname_q = g_shell_quote(fname);
+	char *dir_q = g_shell_quote(dir);
+
+	utils_string_replace_all( cmd_str, "%f", fname_q );
+	utils_string_replace_all( cmd_str, "%d", dir_q );
+
+	g_free( dir_q );
+	g_free( fname_q );
 
 	cmd = g_string_free(cmd_str, FALSE);
 	locale_cmd = utils_get_locale_from_utf8(cmd);
