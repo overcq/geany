@@ -617,8 +617,13 @@ static
 gboolean
 E_document_Q_autosave_X_activate( void *doc
 ){	GeanyDocument *document = doc;
-	document->last_save_time = g_get_monotonic_time();
-	document->activate_timeout = 0;
+	GeanyDocument *current_document = document_get_current();
+	if( current_document
+	&& document == current_document
+	)
+	{	document->last_save_time = g_get_monotonic_time();
+		document->activate_timeout = 0;
+	}
 	return G_SOURCE_REMOVE;
 }
 
@@ -627,11 +632,10 @@ E_document_X_activate( GObject *obj
 , GeanyDocument *doc
 , void *data
 ){  E_doc_com_I_idle_update_M();
-	GeanyDocument *current_document = document_get_current();
-	if( current_document->file_name )
+	if( doc->file_name )
 	{	if( doc->activate_timeout )
 			g_source_remove( doc->activate_timeout );
-		current_document->activate_timeout = g_timeout_add_seconds( E_document_Q_autosave_S_activate_delay, E_document_Q_autosave_X_activate, doc );
+		doc->activate_timeout = g_timeout_add_seconds( E_document_Q_autosave_S_activate_delay, E_document_Q_autosave_X_activate, doc );
 	}
 }
 
