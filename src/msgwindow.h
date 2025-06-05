@@ -61,6 +61,10 @@ void msgwin_msg_add(gint msg_color, gint line, GeanyDocument *doc, const gchar *
 			G_GNUC_PRINTF (4, 5);
 void msgwin_msg_add_string(gint msg_color, gint line, GeanyDocument *doc, const char *msg);
 
+void E_msg_window_Q_msg_I_add_string_( int, int, GeanyDocument *, char **, const char * );
+
+void E_msg_window_Q_msg_I_show( char * );
+
 void msgwin_clear_tab(gint tabnum);
 
 void msgwin_switch_tab(gint tabnum, gboolean show);

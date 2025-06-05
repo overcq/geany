@@ -661,7 +661,6 @@ void msgwin_msg_add(gint msg_color, gint line, GeanyDocument *doc, const gchar *
 	g_free(string);
 }
 
-
 /**
  * Adds a new message in the messages tab treeview in the messages window.
  *
@@ -713,6 +712,50 @@ void msgwin_msg_add_string(gint msg_color, gint line, GeanyDocument *doc, const 
 		g_free(utf8_msg);
 }
 
+void
+E_msg_window_Q_msg_I_add_string_( int msg_color
+, int line
+, GeanyDocument *doc
+, char **path
+, const char *string
+){	GtkTreeIter iter;
+	const GdkColor *color = get_color(msg_color);
+	gchar *tmp;
+	gsize len;
+	gchar *utf8_msg;
+
+	if (! ui_prefs.msgwindow_visible)
+		msgwin_show_hide(TRUE);
+
+	len = strlen(string);
+	if (len > 1024)
+		tmp = g_strndup(string, 1024);
+	else
+		tmp = g_strdup(string);
+
+	if (! g_utf8_validate(tmp, -1, NULL))
+		utf8_msg = utils_get_utf8_from_locale(tmp);
+	else
+		utf8_msg = tmp;
+
+	gtk_list_store_append(msgwindow.store_msg, &iter);
+	gtk_list_store_set(msgwindow.store_msg, &iter,
+		MSG_COL_LINE, line, MSG_COL_DOC_ID, doc ? doc->id : 0, MSG_COL_COLOR,
+		color, MSG_COL_STRING, utf8_msg, -1);
+
+	g_free(tmp);
+	if (utf8_msg != tmp)
+		g_free(utf8_msg);
+
+	*path = gtk_tree_model_get_string_from_iter(( void * )msgwindow.store_msg, &iter );
+}
+
+void
+E_msg_window_Q_msg_I_show( char *path
+){	GtkTreePath *path_ = gtk_tree_path_new_from_string(path);
+	gtk_tree_view_set_cursor(( void * )msgwindow.tree_msg, path_, 0, FALSE );
+	gtk_tree_path_free( path_ );
+}
 
 /**
  * Logs a new status message *without* setting the status bar.

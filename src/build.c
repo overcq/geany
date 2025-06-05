@@ -199,6 +199,7 @@ char *Q_action_S_build_target[] =
 static GMutex Q_action_S_mutex;
 static GIOChannel *E_compile_S_channel_out, *E_compile_S_channel_err;
 static GPid E_compile_S_pid = ( GPid )~0;
+static char *E_compile_I_exec_X_watch_S_log_Z_message_red;
 static _Bool E_compile_I_exec_X_watch_S_log_Z_message, E_compile_I_exec_X_watch_S_log_Z_compiler;
 static _Bool E_compile_I_make_S_cx_project;
 
@@ -227,6 +228,8 @@ E_compile_I_exec_X_watch( GPid pid
     }
     if( E_compile_I_exec_X_watch_S_log_Z_message )
     {   msgwin_switch_tab( MSG_MESSAGE, true );
+		if( E_compile_I_exec_X_watch_S_log_Z_message_red )
+			E_msg_window_Q_msg_I_show( E_compile_I_exec_X_watch_S_log_Z_message_red );
         keybindings_send_command( GEANY_KEY_GROUP_FOCUS, GEANY_KEYS_FOCUS_EDITOR );
     }else if( E_compile_I_exec_X_watch_S_log_Z_compiler )
     {   msgwin_switch_tab( MSG_COMPILER, true );
@@ -263,7 +266,7 @@ E_compile_I_exec_Q_stdout_X_watch( GIOChannel *src
     {   if(l)
         {   if( l > nl_length )
             {   s[ l - nl_length ] = '\0';
-                msgwin_compiler_add( COLOR_BLUE, "%s", s );
+                msgwin_compiler_add_string( COLOR_BLUE, s );
                 E_compile_I_exec_X_watch_S_log_Z_compiler = true;
             }
             g_free(s);
@@ -306,7 +309,7 @@ E_compile_I_exec_Q_stderr_X_watch( GIOChannel *src
                     c = COLOR_BLACK;
                 char *s_1 = s;
                 if( !strncmp( s_1, "In file included from ", 22 )
-                    || !strncmp( s_1, "                 from ", 22 )
+				|| !strncmp( s_1, "                 from ", 22 )
                 )
                     s_1 += 22;
                 if( E_compile_I_make_S_cx_project )
@@ -322,19 +325,32 @@ E_compile_I_exec_Q_stderr_X_watch( GIOChannel *src
                         }else
                             *s_2 = ':';
                     }
-                }
-                msgwin_compiler_add( c, "%s", s_1 );
+                }else
+                {   char *s_2 = g_utf8_strchr( s_1, -1, ':' );
+                    if( s_2 )
+                    {   *s_2 = '\0';
+                        if( g_str_has_prefix( s_1, "I_compile_S_0_" )
+						&& g_str_has_suffix( s_1, ".c_" )
+						)
+                        {   *( s_2 - 1 ) = '\0';
+							s_1 = g_strconcat( s_1 + 14, ":", s_2 + 1, NULL );
+                            g_free(s);
+                            s = s_1;
+                        }else
+                            *s_2 = ':';
+                    }
+				}
+				msgwin_compiler_add_string( c, s_1 );
                 E_compile_I_exec_X_watch_S_log_Z_compiler = true;
                 if( c != COLOR_BLACK )
-                {   msgwin_msg_add(
-                      c
-                    , -1
-                    , NULL
-                    , "%s"
-                    , s_1
-                    );
-                    E_compile_I_exec_X_watch_S_log_Z_message = true;
-                }
+				{	if( c != COLOR_RED
+					|| E_compile_I_exec_X_watch_S_log_Z_message_red
+					)
+						msgwin_msg_add_string( c, -1, NULL, s_1 );
+					else
+						E_msg_window_Q_msg_I_add_string_( c, -1, NULL, &E_compile_I_exec_X_watch_S_log_Z_message_red, s_1 );
+					E_compile_I_exec_X_watch_S_log_Z_message = true;
+				}
             }
             g_free(s);
         }
@@ -406,6 +422,7 @@ E_compile_I_exec( char *argv[]
     g_string_free( s, true );
     E_compile_I_exec_X_watch_S_log_Z_compiler = false;
     E_compile_I_exec_X_watch_S_log_Z_message = false;
+	E_compile_I_exec_X_watch_S_log_Z_message_red = 0;
     g_child_watch_add( E_compile_S_pid
     , E_compile_I_exec_X_watch
     , NULL
