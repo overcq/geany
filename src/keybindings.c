@@ -75,6 +75,8 @@ static const gboolean swap_alt_tab_order = FALSE;
 /* central keypress event handler, almost all keypress events go to this function */
 static gboolean on_key_press_event(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
 
+static void on_menubar_deactivate(GtkMenuShell *shell, gpointer data);
+
 static gboolean check_current_word(GeanyDocument *doc, gboolean sci_word);
 static gboolean read_current_word(GeanyDocument *doc, gboolean sci_word);
 static gchar *get_current_word_or_sel(GeanyDocument *doc, gboolean sci_word);
@@ -599,6 +601,8 @@ static void init_default_kb(void)
 		"menu_toggle_all_additional_widgets1");
 	add_kb(group, GEANY_KEYS_VIEW_FULLSCREEN, cb_func_menu_fullscreen,
 		GDK_KEY_F11, 0, "menu_fullscreen", _("Fullscreen"), "menu_fullscreen1");
+	add_kb(group, GEANY_KEYS_TOGGLE_MENUBAR, NULL,
+		0, 0, "toggle_menubar", _("Toggle Menubar"), "menu_show_menubar1");
 	add_kb(group, GEANY_KEYS_VIEW_MESSAGEWINDOW, cb_func_menu_messagewindow,
 		0, 0, "menu_messagewindow", _("Toggle Messages Window"),
 		"menu_show_messages_window1");
@@ -747,6 +751,9 @@ void keybindings_init(void)
 	gtk_window_add_accel_group(GTK_WINDOW(main_widgets.window), kb_accel_group);
 
 	g_signal_connect(main_widgets.window, "key-press-event", G_CALLBACK(on_key_press_event), NULL);
+	g_signal_connect(ui_lookup_widget(main_widgets.window, "menubar1"),
+			"deactivate", G_CALLBACK(on_menubar_deactivate),
+			ui_lookup_widget(main_widgets.window, "hbox_menubar"));
 }
 
 
@@ -1115,6 +1122,17 @@ static gboolean check_fixed_kb(guint keyval, guint state)
 				gtk_notebook_set_current_page(GTK_NOTEBOOK(main_widgets.notebook), -1);
 			return TRUE;
 		}
+	}
+	/* temporarily show the menubar again when triggering it while hidden */
+	if (state == 0 && keyval == GDK_KEY_F10 && ! ui_prefs.menubar_visible)
+	{
+		GtkWidget *const geany_menubar_box = ui_lookup_widget(main_widgets.window, "hbox_menubar");
+		GtkWidget *const geany_menubar = ui_lookup_widget(main_widgets.window, "menubar1");
+
+		gtk_widget_show(geany_menubar_box);
+		gtk_menu_shell_select_first(GTK_MENU_SHELL(geany_menubar), TRUE);
+
+		return TRUE;
 	}
 	return FALSE;
 }
@@ -1601,6 +1619,19 @@ static void cb_func_menu_opencolorchooser(G_GNUC_UNUSED guint key_id)
 }
 
 
+static void on_menubar_deactivate(GtkMenuShell *shell, gpointer data)
+{
+	if (! ui_prefs.menubar_visible)
+		gtk_widget_hide(data);
+}
+
+
+static void on_toggle_menubar(GtkMenuItem *menuitem, gpointer user_data)
+{
+	ui_menubar_show_hide(!ui_prefs.menubar_visible);
+}
+
+
 static gboolean cb_func_view_action(guint key_id)
 {
 	switch (key_id)
@@ -1619,6 +1650,9 @@ static gboolean cb_func_view_action(guint key_id)
 			break;
 		case GEANY_KEYS_VIEW_ZOOMRESET:
 			on_normal_size1_activate(NULL, NULL);
+			break;
+		case GEANY_KEYS_TOGGLE_MENUBAR:
+			on_toggle_menubar(NULL, NULL);
 			break;
 		default:
 			break;
@@ -1747,11 +1781,14 @@ static gboolean cb_func_switch_action(guint key_id)
 		case GEANY_KEYS_FOCUS_EDITOR:
 		{
 			GeanyDocument *doc = document_get_current();
-			GtkWidget *sci = GTK_WIDGET(doc->editor->sci);
-			if (gtk_widget_has_focus(sci))
-				ui_update_statusbar(doc, -1);
-			else
-				gtk_widget_grab_focus(sci);
+			if (doc != NULL)
+			{
+				GtkWidget *sci = GTK_WIDGET(doc->editor->sci);
+				if (gtk_widget_has_focus(sci))
+					ui_update_statusbar(doc);
+				else
+					gtk_widget_grab_focus(sci);
+			}
 			break;
 		}
 		case GEANY_KEYS_FOCUS_SEARCHBAR:
@@ -1766,19 +1803,19 @@ static gboolean cb_func_switch_action(guint key_id)
 			focus_sidebar();
 			break;
 		case GEANY_KEYS_FOCUS_DOCCOMTAB:
-			msgwin_switch_tab( MSG_DOC_COM, FALSE );
+			msgwin_switch_tab( MSG_DOC_COM, TRUE );
 			break;
 		case GEANY_KEYS_FOCUS_VTE:
 			msgwin_switch_tab(MSG_VTE, TRUE);
 			break;
 		case GEANY_KEYS_FOCUS_COMPILER:
-			msgwin_switch_tab( MSG_COMPILER, FALSE );
+			msgwin_switch_tab(MSG_COMPILER, TRUE);
 			break;
 		case GEANY_KEYS_FOCUS_MESSAGES:
-			msgwin_switch_tab( MSG_MESSAGE, FALSE );
+			msgwin_switch_tab( MSG_MESSAGE, TRUE );
 			break;
 		case GEANY_KEYS_FOCUS_STATUSBAR:
-			msgwin_switch_tab( MSG_STATUS, FALSE );
+			msgwin_switch_tab( MSG_STATUS, TRUE );
 			break;
 		case GEANY_KEYS_FOCUS_MESSAGE_WINDOW:
 			focus_msgwindow();

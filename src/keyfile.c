@@ -40,6 +40,7 @@
 #include "encodingsprivate.h"
 #include "filetypes.h"
 #include "geanyobject.h"
+#include "keybindings.h"
 #include "main.h"
 #include "msgwindow.h"
 #include "prefs.h"
@@ -82,25 +83,24 @@
 #ifdef G_OS_WIN32
 # define GEANY_DEFAULT_TOOLS_TERMINAL	"cmd.exe /Q /C %c"
 # define GEANY_DEFAULT_USE_NATIVE_DLGS	TRUE
+# define GEANY_DEFAULT_FONT_SYMBOL_LIST	"Sans 9"
+# define GEANY_DEFAULT_FONT_MSG_WINDOW	"Consolas 9"
+# define GEANY_DEFAULT_FONT_EDITOR		"Consolas 10"
 #elif defined(__APPLE__)
 # define GEANY_DEFAULT_TOOLS_TERMINAL	"open -a terminal %c"
 # define GEANY_DEFAULT_USE_NATIVE_DLGS	TRUE
+# define GEANY_DEFAULT_FONT_SYMBOL_LIST	"Helvetica Medium 12"
+# define GEANY_DEFAULT_FONT_MSG_WINDOW	"Menlo Medium 12"
+# define GEANY_DEFAULT_FONT_EDITOR		"Menlo Medium 12"
 #else
 # define GEANY_DEFAULT_TOOLS_TERMINAL	"xterm -e \"/bin/sh %c\""
 # define GEANY_DEFAULT_USE_NATIVE_DLGS	FALSE
+# define GEANY_DEFAULT_FONT_SYMBOL_LIST	"Sans 9"
+# define GEANY_DEFAULT_FONT_MSG_WINDOW	"Monospace 9"
+# define GEANY_DEFAULT_FONT_EDITOR		"Monospace 10"
 #endif
-#ifdef __APPLE__
-#define GEANY_DEFAULT_TOOLS_BROWSER		"open -a safari"
-#define GEANY_DEFAULT_FONT_SYMBOL_LIST	"Helvetica Medium 12"
-#define GEANY_DEFAULT_FONT_MSG_WINDOW	"Menlo Medium 12"
-#define GEANY_DEFAULT_FONT_EDITOR		"Menlo Medium 12"
-#else
 /* Browser chosen by GTK */
 #define GEANY_DEFAULT_TOOLS_BROWSER		""
-#define GEANY_DEFAULT_FONT_SYMBOL_LIST	"Sans 9"
-#define GEANY_DEFAULT_FONT_MSG_WINDOW	"Monospace 9"
-#define GEANY_DEFAULT_FONT_EDITOR		"Monospace 10"
-#endif
 #define GEANY_DEFAULT_TOOLS_PRINTCMD	"lpr"
 #define GEANY_DEFAULT_TOOLS_GREP		"grep"
 #define GEANY_DEFAULT_MRU_LENGTH		10
@@ -618,7 +618,7 @@ static void save_dialog_prefs(GKeyFile *config)
 	g_key_file_set_string(config, PACKAGE, "context_action_cmd", tool_prefs.context_action_cmd);
 
 	/* printing */
-	g_key_file_set_string(config, "printing", "print_cmd", printing_prefs.external_print_cmd ? printing_prefs.external_print_cmd : "");
+	g_key_file_set_string(config, "printing", "print_cmd_common_format", printing_prefs.external_print_cmd ? printing_prefs.external_print_cmd : "");
 	g_key_file_set_boolean(config, "printing", "use_gtk_printing", printing_prefs.use_gtk_printing);
 	g_key_file_set_boolean(config, "printing", "print_line_numbers", printing_prefs.print_line_numbers);
 	g_key_file_set_boolean(config, "printing", "print_page_numbers", printing_prefs.print_page_numbers);
@@ -659,6 +659,7 @@ static void save_dialog_prefs(GKeyFile *config)
 
 static void save_ui_prefs(GKeyFile *config)
 {
+	g_key_file_set_boolean(config, PACKAGE, "menubar_visible", ui_prefs.menubar_visible);
 	g_key_file_set_boolean(config, PACKAGE, "sidebar_visible", ui_prefs.sidebar_visible);
 	g_key_file_set_boolean(config, PACKAGE, "statusbar_visible", interface_prefs.statusbar_visible);
 	g_key_file_set_boolean(config, PACKAGE, "msgwindow_visible", ui_prefs.msgwindow_visible);
@@ -777,7 +778,7 @@ static void load_recent_files(GKeyFile *config, GQueue *queue, const gchar *key)
 
 
 /*
- * Load session list from the given keyfile and return an array containg the file names
+ * Load session list from the given keyfile and return an array containing the file names
  * */
 GPtrArray *configuration_load_session_files(GKeyFile *config)
 {
@@ -1052,9 +1053,9 @@ static void load_dialog_prefs(GKeyFile *config)
 	if (!EMPTY(tmp_string2))
 	{
 	#ifdef G_OS_WIN32
-		tmp_string = g_strconcat(GEANY_DEFAULT_TOOLS_PRINTCMD, " \"%f\"", NULL);
+		tmp_string = g_strconcat(GEANY_DEFAULT_TOOLS_PRINTCMD, " \"%d\\%f\"", NULL);
 	#else
-		tmp_string = g_strconcat(GEANY_DEFAULT_TOOLS_PRINTCMD, " '%f'", NULL);
+		tmp_string = g_strconcat(GEANY_DEFAULT_TOOLS_PRINTCMD, " '%d/%f'", NULL);
 	#endif
 	}
 	else
@@ -1062,7 +1063,17 @@ static void load_dialog_prefs(GKeyFile *config)
 		tmp_string = g_strdup("");
 	}
 
-	printing_prefs.external_print_cmd = utils_get_setting_string(config, "printing", "print_cmd", tmp_string);
+	/* new value is print_cmd_common_format with build-like format, old is print_cmd with only %f for full path */
+	if (g_key_file_has_key(config, "printing", "print_cmd_common_format", NULL))
+		printing_prefs.external_print_cmd = utils_get_setting_string(config, "printing", "print_cmd_common_format", tmp_string);
+	else /* load old value */
+	{
+		printing_prefs.external_print_cmd = g_key_file_get_string(config, "printing", "print_cmd", NULL);
+		if (! printing_prefs.external_print_cmd)
+			printing_prefs.external_print_cmd = g_strdup(tmp_string);
+		else /* transform the old value */
+			utils_str_replace_all(&printing_prefs.external_print_cmd, "%f", "%d" G_DIR_SEPARATOR_S "%f");
+	}
 	g_free(tmp_string);
 	g_free(tmp_string2);
 
@@ -1077,6 +1088,7 @@ static void load_dialog_prefs(GKeyFile *config)
 
 static void load_ui_prefs(GKeyFile *config)
 {
+	ui_prefs.menubar_visible = utils_get_setting_boolean(config, PACKAGE, "menubar_visible", TRUE);
 	ui_prefs.sidebar_visible = utils_get_setting_boolean(config, PACKAGE, "sidebar_visible", TRUE);
 	ui_prefs.msgwindow_visible = utils_get_setting_boolean(config, PACKAGE, "msgwindow_visible", TRUE);
 	ui_prefs.msgwindow_size = utils_get_setting_integer( config, PACKAGE, "msgwindow_size", 105 );
@@ -1394,6 +1406,10 @@ void configuration_apply_settings(void)
 		ui_prefs.fullscreen = TRUE;
 		ui_set_fullscreen();
 	}
+
+	/* restore menubar state or hide on startup */
+	if (!ui_prefs.menubar_visible)
+		ui_menubar_show_hide(FALSE);
 
 	msgwin_show_hide_tabs();
 }

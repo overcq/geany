@@ -57,7 +57,7 @@ G_BEGIN_DECLS
  * @warning You should not test for values below 200 as previously
  * @c GEANY_API_VERSION was defined as an enum value, not a macro.
  */
-#define GEANY_API_VERSION 250
+#define GEANY_API_VERSION 251
 
 /* hack to have a different ABI when built with different GTK major versions
  * because loading plugins linked to a different one leads to crashes.
@@ -231,7 +231,7 @@ typedef struct GeanyProxyFuncs GeanyProxyFuncs;
 typedef struct GeanyPlugin
 {
 	PluginInfo	*info;	/**< Fields set in plugin_set_info(). */
-	GeanyData	*geany_data;	/**< Pointer to global GeanyData intance */
+	GeanyData	*geany_data;	/**< Pointer to global GeanyData instance */
 	GeanyPluginFuncs *funcs;	/**< Functions implemented by the plugin, set in geany_load_module() */
 	GeanyProxyFuncs	*proxy_funcs; /**< Hooks implemented by the plugin if it wants to act as a proxy
 									   Must be set prior to calling geany_plugin_register_proxy() */

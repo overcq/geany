@@ -28,6 +28,7 @@ gtk4_dependency_pkgs=""
 
 packages="
 adwaita-icon-theme
+adwaita-icon-theme-legacy
 atk
 brotli
 bzip2
@@ -147,9 +148,24 @@ _getpkg() {
 		# use @(gz|xz|zst) to filter out signature files (e.g. mingw-w64-x86_64-...-any.pkg.tar.zst.sig)
 		ls $cachedir/mingw-w64-${ABI}-${1}-${package_version}-*.tar.@(gz|xz|zst) | sort -V | tail -n 1
 	else
-		# -dd to ignore dependencies as we listed them already above in $packages and
-		# make pacman ignore its possibly existing cache (otherwise we would get an URL to the cache)
-		pacman -Sddp --cachedir /nonexistent mingw-w64-${ABI}-${1}
+		case "$1" in
+		"cairo")
+			# stick with cairo-1.18.4-1 until lagging issue resolved
+			# https://github.com/geany/geany-plugins/issues/1466
+			# https://gitlab.freedesktop.org/cairo/cairo/-/issues/905
+			echo "https://mirror.msys2.org/mingw/mingw64/mingw-w64-${ABI}-cairo-1.18.4-1-any.pkg.tar.zst"
+			;;
+		"pango")
+			# stick with pango-1.56.3-2 until lagging issue resolved
+			# https://github.com/geany/geany/pull/4360
+			echo "https://mirror.msys2.org/mingw/mingw64/mingw-w64-${ABI}-pango-1.56.3-2-any.pkg.tar.zst"
+			;;
+		*)
+			# -dd to ignore dependencies as we listed them already above in $packages and
+			# make pacman ignore its possibly existing cache (otherwise we would get an URL to the cache)
+			pacman -Sddp --cachedir /nonexistent mingw-w64-${ABI}-${1}
+			;;
+		esac
 	fi
 }
 
@@ -211,6 +227,7 @@ delayed_post_install() {
 		${EXE_WRAPPER_64} bin/gdk-pixbuf-query-loaders.exe --update-cache
 		${EXE_WRAPPER_64} bin/gtk-update-icon-cache-3.0.exe -q -t -f share/icons/hicolor
 		${EXE_WRAPPER_64} bin/gtk-update-icon-cache-3.0.exe -q -t -f share/icons/Adwaita
+		${EXE_WRAPPER_64} bin/gtk-update-icon-cache-3.0.exe -q -t -f share/icons/AdwaitaLegacy
 		${EXE_WRAPPER_64} bin/glib-compile-schemas.exe share/glib-2.0/schemas/
 		${EXE_WRAPPER_64} bin/update-mime-database.exe share/mime
 	fi
@@ -287,7 +304,7 @@ download_and_extract_gtk_theme() {
 		echo "etc/gtk-3.0/settings.ini already exists. Aborting."
 		exit 1
 	fi
-	echo -e "[Settings]\r\ngtk-theme-name=Prof-Gnome" > etc/gtk-3.0/settings.ini
+	echo -e "[Settings]\r\ngtk-theme-name=Prof-Gnome\r\ngtk-toolbar-icon-size=GTK_ICON_SIZE_SMALL_TOOLBAR\r\n" > etc/gtk-3.0/settings.ini
 }
 
 create_bundle_dependency_info_file() {

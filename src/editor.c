@@ -47,6 +47,7 @@
 #include "keybindings.h"
 #include "msgwindow.h"
 #include "main.h"
+#include "navqueue.h"
 #include "pluginextension.h"
 #include "prefs.h"
 #include "sciwrappers.h"
@@ -346,6 +347,19 @@ static gboolean on_editor_button_press_event(GtkWidget *widget, GdkEventButton *
 		gtk_menu_popup_at_pointer(GTK_MENU(main_widgets.editor_menu), (GdkEvent *) event);
 		return TRUE;
 	}
+	
+	if (event->button == 8)
+	{
+		navqueue_go_back();
+		return TRUE;
+	}
+
+	if (event->button == 9)
+	{
+		navqueue_go_forward();
+		return TRUE;
+	}
+
 	return FALSE;
 }
 
@@ -499,7 +513,7 @@ static void on_update_ui(GeanyEditor *editor, G_GNUC_UNUSED SCNotification *nt)
 	/* brace highlighting */
 	editor_highlight_braces(editor, pos);
 
-	ui_update_statusbar(editor->document, pos);
+	ui_update_statusbar(editor->document);
 
 #if 0
 	/** experimental code for inverting selections */
@@ -4786,7 +4800,7 @@ static gboolean editor_check_colourise(GeanyEditor *editor)
 	/* now that the current document is colourised, fold points are now accurate,
 	 * so force an update of the current function/tag. */
 	symbols_get_current_function(NULL, NULL);
-	ui_update_statusbar(NULL, -1);
+	ui_update_statusbar(NULL);
 
 	return TRUE;
 }
@@ -4948,6 +4962,12 @@ static ScintillaObject *create_new_sci(GeanyEditor *editor)
 
 	/* input method editor's candidate window behaviour */
 	SSM(sci, SCI_SETIMEINTERACTION, editor_prefs.ime_interaction, 0);
+
+	/* paste to all cursor positions, not just the primary one */
+	SSM(sci, SCI_SETMULTIPASTE, SC_MULTIPASTE_EACH, 0);
+
+	/* perform autocomplete for all cursor positions, not just the primary one */
+	SSM(sci, SCI_AUTOCSETMULTI, SC_MULTIAUTOC_EACH , 0);
 
 	/* only connect signals if this is for the document notebook, not split window */
 	if (editor->sci == NULL)

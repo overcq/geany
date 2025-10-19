@@ -294,11 +294,14 @@ static void main_init(void)
 }
 
 
-const gchar *
-main_get_version_string( void
-){  if( utils_str_equal( REVISION, "-1" ))
+const gchar *main_get_version_string(void)
+{
+	static gchar full[] = PACKAGE_VERSION " (git >= " REVISION ")";
+
+	if (utils_str_equal(REVISION, "-1"))
 		return PACKAGE_VERSION;
-	return PACKAGE_VERSION " (git >= " REVISION ")";
+	else
+		return full;
 }
 
 
@@ -327,42 +330,58 @@ main_get_argv_filename( const gchar *filename
 }
 
 
-/* Get a :line:column specifier from the end of a filename (if present),
- * return the line/column values, and remove the specifier from the string.
+/* get a :line:column specifier from the end of a filename (if present),
+ * return the line/column values, and remove the specifier from the string
  * (Note that *line and *column must both be set to -1 initially) */
-static
-void
-get_line_and_column_from_filename( char *filename
-, int *line
-, int *column
-){  g_assert( *line == -1 && *column == -1 );
-	if( G_UNLIKELY( EMPTY(filename) ))
+static void get_line_and_column_from_filename(gchar *filename, gint *line, gint *column)
+{
+	gsize i;
+	gint colon_count = 0;
+	gboolean have_number = FALSE;
+	gsize len;
+
+	g_assert(*line == -1 && *column == -1);
+
+	if (G_UNLIKELY(EMPTY(filename)))
 		return;
-	/* Allows to open files named like “test:0”. */
-	if( g_file_test( filename, G_FILE_TEST_EXISTS ))
+
+	/* allow to open files like "test:0" */
+	if (g_file_test(filename, G_FILE_TEST_EXISTS))
 		return;
-	_Bool have_number = false;
-	_Bool colon_last = true;
-	size_t len = strlen(filename);
-	for( size_t i = len - 1; i >= 1; i-- )
-	{   _Bool is_digit = g_ascii_isdigit( filename[i] );
-		if( !is_digit
-	    && filename[i] != ':'
-		)
-			return;
-		if( !is_digit )
-		{   if( colon_last )
-				return;	/* Bail on: colon on the end or 2+ colons in a row. */
-			colon_last = true;
-		    int number = atoi( &filename[ i + 1 ] );
-			filename[i] = '\0';
-			*column = *line;
-			*line = number;
-    		if( *column != -1 )
-	    		return;	/* Line and column are set, so weʼre done. */
+
+	len = strlen(filename);
+	for (i = len - 1; i >= 1; i--)
+	{
+		gboolean is_colon = filename[i] == ':';
+		gboolean is_digit = g_ascii_isdigit(filename[i]);
+
+		if (! is_colon && ! is_digit)
+			break;
+
+		if (is_colon)
+		{
+			if (++colon_count > 1)
+				break;	/* bail on 2+ colons in a row */
 		}
 		else
-			colon_last = false;
+			colon_count = 0;
+
+		if (is_digit)
+			have_number = TRUE;
+
+		if (is_colon && have_number)
+		{
+			gint number = atoi(&filename[i + 1]);
+
+			filename[i] = '\0';
+			have_number = FALSE;
+
+			*column = *line;
+			*line = number;
+		}
+
+		if (*column >= 0)
+			break;	/* line and column are set, so we're done */
 	}
 }
 
@@ -573,7 +592,7 @@ parse_command_line_options( int *argc
 	{   gchar *build_date = utils_parse_and_format_build_date(__DATE__);
 
 		printf(PACKAGE " %s (", main_get_version_string());
-		/* note for translators: library versions are printed after this */
+		/* Translators: library versions are printed after this */
 		printf(_("built on %s with "), build_date);
 		printf(geany_lib_versions,
 			GTK_MAJOR_VERSION, GTK_MINOR_VERSION, GTK_MICRO_VERSION,
@@ -778,9 +797,9 @@ gboolean main_handle_filename(const gchar *locale_filename)
 		return FALSE;
 
 	get_line_and_column_from_filename(filename, &line, &column);
-	if( line != -1 )
+	if (line >= 0)
 		cl_options.goto_line = line;
-	if( column != -1 )
+	if (column >= 0)
 		cl_options.goto_column = column;
 
 	if (g_file_test(filename, G_FILE_TEST_IS_REGULAR))
@@ -1069,11 +1088,13 @@ gint main_lib(gint argc, gchar **argv)
 	ui_create_recent_menus();
 
 	ui_set_statusbar(TRUE, _("This is Geany %s."), main_get_version_string());
-	if( config_dir_result )
-	{   const char *message = _( "Configuration directory could not be created (%s)." );
-		ui_set_statusbar( TRUE, message, g_strerror( config_dir_result ));
-		g_warning( message, g_strerror( config_dir_result ));
+	if (config_dir_result != 0)
+	{
+		gchar *message = g_strdup_printf(_("Configuration directory could not be created (%s)."),
+				g_strerror(config_dir_result));
+		ui_set_statusbar(TRUE, "%s", message);
 		g_warning("%s", message);
+		g_free(message);
 	}
 #ifdef HAVE_SOCKET
 	if (socket_info.lock_socket == -1)

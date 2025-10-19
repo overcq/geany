@@ -276,6 +276,7 @@ enum GeanyKeyBindingID
 	GEANY_KEYS_BUILD_MAINTAINERCLEAN,				/**< Keybinding. */
 	GEANY_KEYS_FOCUS_STATUSBAR,					/**< Keybinding. */
 	GEANY_KEYS_FOCUS_DOCCOMTAB,					/**< Keybinding. */
+    GEANY_KEYS_TOGGLE_MENUBAR,
 	GEANY_KEYS_COUNT	/* must not be used by plugins */
 };
 

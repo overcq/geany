@@ -235,7 +235,7 @@ E_compile_I_exec_X_watch( GPid pid
     {   msgwin_switch_tab( MSG_COMPILER, true );
         keybindings_send_command( GEANY_KEY_GROUP_FOCUS, GEANY_KEYS_FOCUS_EDITOR );
     }
-    //NDFN Brak dostępu do zmiennej.
+    //NDFN Brak dost?pu do zmiennej.
     //if( prefs.beep_on_errors )
         gdk_display_beep( gdk_display_get_default() );
     g_mutex_unlock( &Q_action_S_mutex );
@@ -330,8 +330,8 @@ E_compile_I_exec_Q_stderr_X_watch( GIOChannel *src
                     if( s_2 )
                     {   *s_2 = '\0';
                         if( g_str_has_prefix( s_1, "I_compile_S_0_" )
-						&& g_str_has_suffix( s_1, ".c_" )
-						)
+                        && g_str_has_suffix( s_1, ".c_" )
+                        )
                         {   *( s_2 - 1 ) = '\0';
 							s_1 = g_strconcat( s_1 + 14, ":", s_2 + 1, NULL );
                             g_free(s);
@@ -442,7 +442,7 @@ E_compile_I_make(
         return false;
     GFile *dir_1 = NULL, *dir = g_file_new_for_path( document->real_path );
     GFile *parent = g_file_get_parent(dir);
-    // Poniżej – jeśli polecenie wydane jest z głównego katalogu użytkownika, to limit podążania w hierarchii systemu plików do poniżej takiego katalogu jest intencjonalnie ignorowany.
+    // Poni?ej ? je?li polecenie wydane jest z g?�wnego katalogu u?ytkownika, to limit pod??ania w hierarchii systemu plik�w do poni?ej takiego katalogu jest intencjonalnie ignorowany.
     GFile *min_parent_dir = NULL;
     if(parent)
     {   min_parent_dir = g_file_new_for_path( g_get_home_dir() );

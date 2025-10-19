@@ -164,10 +164,11 @@ typedef struct UIPrefs
 	/* State of the main window when Geany was closed */
 	gint		geometry[5];	/* 0:x, 1:y, 2:width, 3:height, flag for maximized state */
 	gboolean	fullscreen;
+	int msgwindow_size;
 	gboolean	sidebar_visible;
 	gint		sidebar_page;
 	gboolean	msgwindow_visible;
-	int msgwindow_size;
+	gboolean	menubar_visible;
 	gboolean	allow_always_save; /* if set, files can always be saved, even if unchanged */
 	gchar		*statusbar_template;
 	gboolean	symbols_group_by_type;
@@ -241,8 +242,6 @@ gchar *ui_menu_item_get_text(GtkMenuItem *menu_item);
 
 void ui_dialog_set_primary_button_order(GtkDialog *dialog, gint response, ...);
 
-void ui_hbutton_box_copy_layout(GtkButtonBox *master, GtkButtonBox *copy);
-
 void ui_combo_box_prepend_text_once(GtkComboBoxText *combo, const gchar *text);
 
 void ui_setup_open_button_callback(GtkWidget *open_btn, const gchar *title,
@@ -287,7 +286,7 @@ void ui_init_stock_items(void);
 void ui_add_config_file_menu_item(const gchar *real_path, const gchar *label,
 		GtkContainer *parent);
 
-void ui_update_statusbar(GeanyDocument *doc, gint pos);
+void ui_update_statusbar(GeanyDocument *doc);
 
 
 /* This sets the window title according to the current filename. */
@@ -325,6 +324,8 @@ void ui_document_buttons_update(void);
 
 
 void ui_sidebar_show_hide(void);
+
+void ui_menubar_show_hide(gboolean show);
 
 void ui_document_show_hide(GeanyDocument *doc);
 

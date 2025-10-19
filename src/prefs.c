@@ -922,11 +922,6 @@ on_prefs_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
 		interface_prefs.use_native_windows_dialogs =
 			gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
 
-		widget = ui_lookup_widget(ui_widgets.prefs_dialog, "check_native_dialogs");
-		interface_prefs.use_native_windows_dialogs =
-			gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
-
-
 		/* Interface settings */
 		widget = ui_lookup_widget(ui_widgets.prefs_dialog, "check_sidebar_visible");
 		ui_prefs.sidebar_visible = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
@@ -1305,7 +1300,7 @@ on_prefs_dialog_response(GtkDialog *dialog, gint response, gpointer user_data)
 		/* various preferences */
 		ui_save_buttons_toggle((doc != NULL) ? doc->changed : FALSE);
 		msgwin_show_hide_tabs();
-		ui_update_statusbar(doc, -1);
+		ui_update_statusbar(doc);
 		ui_set_window_title(doc);
 
 		/* store all settings */
@@ -1801,6 +1796,8 @@ void prefs_show_dialog(void)
 		gtk_widget_show(label);
 		gtk_box_pack_start(GTK_BOX(ui_lookup_widget(ui_widgets.prefs_dialog, "vbox32")),
 			label, FALSE, TRUE, 5);
+		/* page Editor->Indentation */
+		label = geany_wrap_label_new(_("<i>Warning: these settings are overridden by the current project. See <b>Project->Properties</b>.</i>"));
 		gtk_widget_show(label);
 		gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
 		gtk_misc_set_padding(GTK_MISC(label), 6, 0);
@@ -1811,8 +1808,8 @@ void prefs_show_dialog(void)
 		gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
 		gtk_misc_set_padding(GTK_MISC(label), 6, 0);
 		gtk_box_pack_start(GTK_BOX(ui_lookup_widget(ui_widgets.prefs_dialog,
-			"label_project_indent_warning")), label, FALSE, TRUE, 5);
-		label = geany_wrap_label_new(_("Note: To apply these settings to all currently open documents, use <i>Project->Apply Default Indentation</i>."));
+			"label_indent_warning")), label, FALSE, TRUE, 5);
+
 		/* add the clear icon to GtkEntry widgets in the dialog */
 		{
 			const gchar *names[] = {
@@ -1877,6 +1874,13 @@ void prefs_show_dialog(void)
 			NULL,
 			GTK_FILE_CHOOSER_ACTION_OPEN,
 			GTK_ENTRY(ui_lookup_widget(ui_widgets.prefs_dialog, "entry_browser")));
+#ifdef G_OS_WIN32
+		/* Browser isn't configurable on Windows, see utils_open_browser() */
+		gtk_widget_set_sensitive(ui_lookup_widget(ui_widgets.prefs_dialog, "entry_browser"), FALSE);
+		gtk_widget_set_tooltip_text(ui_lookup_widget(ui_widgets.prefs_dialog, "entry_browser"),
+			_("Not configurable on Windows (the system default browser is used)."));
+		gtk_widget_set_sensitive(ui_lookup_widget(ui_widgets.prefs_dialog, "button_browser"), FALSE);
+#endif
 		ui_setup_open_button_callback(ui_lookup_widget(ui_widgets.prefs_dialog, "button_grep"),
 			NULL,
 			GTK_FILE_CHOOSER_ACTION_OPEN,

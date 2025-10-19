@@ -1,6 +1,6 @@
 project('geany', 'c', 'cpp',
         meson_version: '>= 0.56',
-        version: '2.1',
+        version: '2.2.0',
         default_options : ['c_std=c11', 'cpp_std=c++17'])
 
 gnome = import('gnome')
@@ -24,6 +24,7 @@ foreach dep : deps_in
 endforeach
 
 glib = deps[0]
+gtk = deps[2]
 
 # detect libc
 glibc = false
@@ -136,8 +137,8 @@ else
 	cdata.set('GEANY_DATA_DIR', join_paths(prefix, get_option('datadir'), 'geany'))
 	cdata.set('GEANY_DOC_DIR', join_paths(prefix, get_option('datadir'), 'doc', 'geany'))
 endif
-cdata.set('top_srcdir', meson.source_root())
-cdata.set('top_builddir', meson.build_root())
+cdata.set('top_srcdir', meson.project_source_root())
+cdata.set('top_builddir', meson.project_build_root())
 
 # for geany.pc (adapted from GTK+)
 pcconf = cdata
@@ -191,6 +192,16 @@ configure_file(
 	install_dir: join_paths(prefix, get_option('libdir'), 'pkgconfig'),
 	output: 'geany.pc',
 	configuration: pcconf
+)
+
+configure_file(
+	input: 'geany.nsi.in',
+	install: false,
+	output: 'geany.nsi',
+	configuration: {
+		'VERSION': meson.project_version(),
+		'GTK_VERSION': gtk.version(),
+	}
 )
 
 # CFLAGS for basic stuff that only depends on libc
@@ -611,6 +622,7 @@ ctags = static_library('ctags',
 	'ctags/optlib/forth.c',
 	'ctags/optlib/meson.c',
 	'ctags/optlib/scss.c',
+	'ctags/optlib/terraform.c',
 	'ctags/parsers/abaqus.c',
 	'ctags/parsers/abc.c',
 	'ctags/parsers/ada.c',
@@ -923,7 +935,7 @@ executable('geany',
 	link_with: libgeany,
 	c_args: geany_cflags + [ '-DG_LOG_DOMAIN="Geany"' ],
 	dependencies: deps,
-	build_rpath: meson.build_root(),
+	build_rpath: meson.project_build_root(),
 	install_rpath: '$ORIGIN/../' + get_option('libdir'),
 	install: true,
 	win_subsystem: 'windows',

@@ -180,144 +180,140 @@ void ui_set_statusbar(gboolean log, const gchar *format, ...)
 }
 
 
-/* note: some comments below are for translators */
-static gchar *create_statusbar_statistics(GeanyDocument *doc,
-	guint line, guint vcol, guint pos)
+/* get column from position, including virtual space */
+static gint get_vcol(ScintillaObject *sci, gint pos)
 {
-	const gchar *cur_tag;
-	const gchar *fmt;
-	const gchar *expos;	/* % expansion position */
-	const gchar sp[] = "      ";
-	GString *stats_str;
-	ScintillaObject *sci = doc->editor->sci;
+	gint col;
 
-	if (!EMPTY(ui_prefs.statusbar_template))
-		fmt = ui_prefs.statusbar_template;
+	/* Add temporary fix for sci infinite loop in Document::GetColumn(int)
+	 * when current pos is beyond document end (can occur when removing
+	 * blocks of selected lines especially esp. brace sections near end of file). */
+	if (pos <= sci_get_length(sci))
+		col = sci_get_col_from_position(sci, pos);
 	else
-		fmt = _(DEFAULT_STATUSBAR_TEMPLATE);
+		col = 0;
 
-	stats_str = g_string_sized_new(120);
+	return col + sci_get_cursor_virtual_space(sci);
+}
 
-	while ((expos = strchr(fmt, '%')) != NULL)
+
+/* note: some comments below are for translators */
+static gboolean insert_statusbar_statistics(GString *stats_str, const gchar placeholder, gpointer data)
+{
+	GeanyDocument *doc = data;
+	const gchar sp[] = "      ";
+	ScintillaObject *sci = doc->editor->sci;
+	gint pos = sci_get_current_position(sci);
+
+	switch (placeholder)
 	{
-		/* append leading text before % char */
-		g_string_append_len(stats_str, fmt, expos - fmt);
-
-		switch (*++expos)
-		{
-			case 'l':
-				g_string_append_printf(stats_str, "%d", line + 1);
-				break;
-			case 'L':
-				g_string_append_printf(stats_str, "%d",
-					sci_get_line_count(doc->editor->sci));
-				break;
-			case 'c':
-				g_string_append_printf(stats_str, "%d", vcol);
-				break;
-			case 'C':
-				g_string_append_printf(stats_str, "%d", vcol + 1);
-				break;
-			case 'p':
-				g_string_append_printf(stats_str, "%u", pos);
-				break;
-			case 's':
-			{
-				gint len = sci_get_selected_text_length2(sci);
-				/* check if whole lines are selected */
-				if (!len || sci_get_col_from_position(sci,
-						sci_get_selection_start(sci)) != 0 ||
-					sci_get_col_from_position(sci,
-						sci_get_selection_end(sci)) != 0)
-					g_string_append_printf(stats_str, "%d", len);
-				else /* L = lines */
-					g_string_append_printf(stats_str, _("%dL"),
-						sci_get_lines_selected(doc->editor->sci) - 1);
-				break;
-			}
-			case 'n' :
-				g_string_append_printf(stats_str, "%d",
-					sci_get_selected_text_length2(doc->editor->sci));
-				break;
-			case 'w':
-				/* RO = read-only */
-				g_string_append(stats_str, (doc->readonly) ? _("RO ") :
-					/* OVR = overwrite/overtype, INS = insert */
-					(sci_get_overtype(doc->editor->sci) ? _("OVR") : _("INS")));
-				break;
-			case 'r':
-				if (doc->readonly)
-				{
-					g_string_append(stats_str, _("RO "));	/* RO = read-only */
-					g_string_append(stats_str, sp + 1);
-				}
-				break;
-			case 't':
-			{
-				switch (editor_get_indent_prefs(doc->editor)->type)
-				{
-					case GEANY_INDENT_TYPE_TABS:
-						g_string_append(stats_str, _("TAB"));
-						break;
-					case GEANY_INDENT_TYPE_SPACES:	/* SP = space */
-						g_string_append(stats_str, _("SP"));
-						break;
-					case GEANY_INDENT_TYPE_BOTH:	/* T/S = tabs and spaces */
-						g_string_append(stats_str, _("T/S"));
-						break;
-				}
-				break;
-			}
-			case 'm':
-				if (doc->changed)
-				{
-					g_string_append(stats_str, _("MOD"));	/* MOD = modified */
-					g_string_append(stats_str, sp);
-				}
-				break;
-			case 'M':
-				g_string_append(stats_str, utils_get_eol_short_name(sci_get_eol_mode(doc->editor->sci)));
-				break;
-			case 'e':
-				g_string_append(stats_str,
-					doc->encoding ? doc->encoding : _("unknown"));
-				if (encodings_is_unicode_charset(doc->encoding) && (doc->has_bom))
-				{
-					g_string_append_c(stats_str, ' ');
-					g_string_append(stats_str, _("(with BOM)"));	/* BOM = byte order mark */
-				}
-				break;
-			case 'f':
-				g_string_append(stats_str, filetypes_get_display_name(doc->file_type));
-				break;
-			case 'S':
-				symbols_get_current_scope(doc, &cur_tag);
-				g_string_append(stats_str, cur_tag);
-				break;
-			case 'Y':
-				g_string_append_c(stats_str, ' ');
-				g_string_append_printf(stats_str, "%d",
-					sci_get_style_at(doc->editor->sci, pos));
-				break;
-			default:
-				g_string_append_len(stats_str, expos, 1);
-		}
-
-		/* skip past %c chars */
-		if (*expos)
-			fmt = expos + 1;
-		else
+		case 'l':
+			g_string_append_printf(stats_str, "%d", sci_get_line_from_position(sci, pos) + 1);
 			break;
+		case 'L':
+			g_string_append_printf(stats_str, "%d", sci_get_line_count(sci));
+			break;
+		case 'c':
+			g_string_append_printf(stats_str, "%d", get_vcol(sci, pos));
+			break;
+		case 'C':
+			g_string_append_printf(stats_str, "%d", get_vcol(sci, pos) + 1);
+			break;
+		case 'p':
+			g_string_append_printf(stats_str, "%u", pos);
+			break;
+		case 's':
+		{
+			gint len = sci_get_selected_text_length2(sci);
+			/* check if whole lines are selected */
+			if (!len || sci_get_col_from_position(sci,
+					sci_get_selection_start(sci)) != 0 ||
+				sci_get_col_from_position(sci,
+					sci_get_selection_end(sci)) != 0)
+				g_string_append_printf(stats_str, "%d", len);
+			else /* Translators: L = lines */
+				g_string_append_printf(stats_str, _("%dL"),
+					sci_get_lines_selected(sci) - 1);
+			break;
+		}
+		case 'n' :
+			g_string_append_printf(stats_str, "%d",
+				sci_get_selected_text_length2(sci));
+			break;
+		case 'w':
+			/* Translators: RO = read-only */
+			g_string_append(stats_str, (doc->readonly) ? _("RO ") :
+				/* Translators: OVR = overwrite/overtype, INS = insert */
+				(sci_get_overtype(sci) ? _("OVR") : _("INS")));
+			break;
+		case 'r':
+			if (doc->readonly)
+			{
+				g_string_append(stats_str, _("RO "));	/* Translators: RO = read-only */
+				g_string_append(stats_str, sp + 1);
+			}
+			break;
+		case 't':
+		{
+			switch (editor_get_indent_prefs(doc->editor)->type)
+			{
+				case GEANY_INDENT_TYPE_TABS:
+					g_string_append(stats_str, _("TAB"));
+					break;
+				case GEANY_INDENT_TYPE_SPACES:	/* Translators: SP = space */
+					g_string_append(stats_str, _("SP"));
+					break;
+				case GEANY_INDENT_TYPE_BOTH:	/* Translators: T/S = tabs and spaces */
+					g_string_append(stats_str, _("T/S"));
+					break;
+			}
+			break;
+		}
+		case 'm':
+			if (doc->changed)
+			{
+				/* Translators: MOD = modified */
+				g_string_append(stats_str, _("MOD"));
+				g_string_append(stats_str, sp);
+			}
+			break;
+		case 'M':
+			g_string_append(stats_str, utils_get_eol_short_name(sci_get_eol_mode(sci)));
+			break;
+		case 'e':
+			g_string_append(stats_str,
+				doc->encoding ? doc->encoding : _("unknown"));
+			if (encodings_is_unicode_charset(doc->encoding) && (doc->has_bom))
+			{
+				g_string_append_c(stats_str, ' ');
+				/* Translators: BOM = byte order mark */
+				g_string_append(stats_str, _("(with BOM)"));
+			}
+			break;
+		case 'f':
+			g_string_append(stats_str, filetypes_get_display_name(doc->file_type));
+			break;
+		case 'S':
+		{
+			const gchar *cur_tag;
+			symbols_get_current_scope(doc, &cur_tag);
+			g_string_append(stats_str, cur_tag);
+			break;
+		}
+		case 'Y':
+			g_string_append_c(stats_str, ' ');
+			g_string_append_printf(stats_str, "%d", sci_get_style_at(sci, pos));
+			break;
+		default:
+			return FALSE;
 	}
-	/* add any remaining text */
-	g_string_append(stats_str, fmt);
 
-	return g_string_free(stats_str, FALSE);
+	return TRUE;
 }
 
 
 /* updates the status bar document statistics */
-void ui_update_statusbar(GeanyDocument *doc, gint pos)
+void ui_update_statusbar(GeanyDocument *doc)
 {
 	g_return_if_fail(doc == NULL || doc->is_valid);
 
@@ -329,23 +325,15 @@ void ui_update_statusbar(GeanyDocument *doc, gint pos)
 
 	if (doc != NULL)
 	{
-		guint line, vcol;
+		const gchar *fmt;
 		gchar *stats_str;
 
-		if (pos == -1)
-			pos = sci_get_current_position(doc->editor->sci);
-		line = sci_get_line_from_position(doc->editor->sci, pos);
-
-		/* Add temporary fix for sci infinite loop in Document::GetColumn(int)
-		 * when current pos is beyond document end (can occur when removing
-		 * blocks of selected lines especially esp. brace sections near end of file). */
-		if (pos <= sci_get_length(doc->editor->sci))
-			vcol = sci_get_col_from_position(doc->editor->sci, pos);
+		if (!EMPTY(ui_prefs.statusbar_template))
+			fmt = ui_prefs.statusbar_template;
 		else
-			vcol = 0;
-		vcol += sci_get_cursor_virtual_space(doc->editor->sci);
+			fmt = _(DEFAULT_STATUSBAR_TEMPLATE);
 
-		stats_str = create_statusbar_statistics(doc, line, vcol, pos);
+		stats_str = utils_replace_placeholders(fmt, insert_statusbar_statistics, doc);
 
 		/* can be overridden by status messages */
 		set_statusbar(stats_str, TRUE);
@@ -1013,6 +1001,38 @@ void ui_sidebar_show_hide(void)
 }
 
 
+void ui_menubar_show_hide(gboolean show)
+{
+	GtkWidget *geany_menubar = ui_lookup_widget(main_widgets.window, "hbox_menubar");
+	GtkWidget *menu_item = ui_lookup_widget(main_widgets.window, "menu_show_menubar1");
+	GtkWidget *editor_separator_item = ui_lookup_widget(main_widgets.editor_menu, "show_menubar_separator1");
+	GtkWidget *editor_show_menubar_item = ui_lookup_widget(main_widgets.editor_menu, "show_menubar1");
+	GeanyKeyGroup *group = keybindings_get_core_group(GEANY_KEY_GROUP_VIEW);
+	GeanyKeyBinding *kb = keybindings_get_item(group, GEANY_KEYS_TOGGLE_MENUBAR);
+
+	if (!show && kb->key == 0)
+		return;  /* don't allow hiding menubar when no keybinding set */
+
+	if (!show)
+	{
+		gchar *val = gtk_accelerator_name(kb->key, kb->mods);
+		msgwin_status_add(_("Menubar has been hidden. To reshow it, press %s or use the Show Menubar item from the context menu."), val);
+		g_free(val);
+	}
+
+	ui_prefs.menubar_visible = show;
+
+	ignore_callback = TRUE;
+	gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_item), show);
+	ignore_callback = FALSE;
+
+	gtk_widget_set_visible(geany_menubar, show);
+	gtk_widget_set_visible(menu_item, !show);
+	gtk_widget_set_visible(editor_separator_item, !show);
+	gtk_widget_set_visible(editor_show_menubar_item, !show);
+}
+
+
 void ui_document_show_hide(GeanyDocument *doc)
 {
 	const gchar *widget_name;
@@ -1565,33 +1585,6 @@ void ui_entry_add_activate_backward_signal(GtkEntry *entry)
 }
 
 
-static void add_to_size_group(GtkWidget *widget, gpointer size_group)
-{
-	g_return_if_fail(GTK_IS_SIZE_GROUP(size_group));
-	gtk_size_group_add_widget(GTK_SIZE_GROUP(size_group), widget);
-}
-
-
-/* Copies the spacing and layout of the master GtkHButtonBox and synchronises
- * the width of each button box's children.
- * Should be called after all child widgets have been packed. */
-void ui_hbutton_box_copy_layout(GtkButtonBox *master, GtkButtonBox *copy)
-{
-	GtkSizeGroup *size_group;
-
-	gtk_box_set_spacing(GTK_BOX(copy), 10);
-	gtk_button_box_set_layout(copy, gtk_button_box_get_layout(master));
-
-	/* now we need to put the widest widget from each button box in a size group,
-	* but we don't know the width before they are drawn, and for different label
-	* translations the widest widget can vary, so we just add all widgets. */
-	size_group = gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL);
-	gtk_container_foreach(GTK_CONTAINER(master), add_to_size_group, size_group);
-	gtk_container_foreach(GTK_CONTAINER(copy), add_to_size_group, size_group);
-	g_object_unref(size_group);
-}
-
-
 static gboolean tree_model_find_text(GtkTreeModel *model,
 		GtkTreeIter *iter, gint column, const gchar *text)
 {
@@ -1972,7 +1965,7 @@ void ui_statusbar_showhide(gboolean state)
 	if (state)
 	{
 		gtk_widget_show(ui_widgets.statusbar);
-		ui_update_statusbar(NULL, -1);
+		ui_update_statusbar(NULL);
 	}
 	else
 		gtk_widget_hide(ui_widgets.statusbar);

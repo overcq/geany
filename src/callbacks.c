@@ -556,7 +556,7 @@ static void handle_switch_page(GeanyDocument *doc)
 		sidebar_select_openfiles_item(doc);
 		ui_save_buttons_toggle(doc->changed);
 		ui_set_window_title(doc);
-		ui_update_statusbar(doc, -1);
+		ui_update_statusbar(doc);
 		ui_update_popup_reundo_items(doc);
 		ui_document_show_hide(doc); /* update the document menu */
 		if (g_strcmp0(entry_text, doc->priv->tag_filter) != 0)
@@ -656,7 +656,7 @@ static void convert_eol(gint mode)
 
 	sci_set_eol_mode(doc->editor->sci, mode);
 
-	ui_update_statusbar(doc, -1);
+	ui_update_statusbar(doc);
 }
 
 
@@ -868,7 +868,7 @@ static void on_set_file_readonly1_toggled(GtkCheckMenuItem *checkmenuitem, gpoin
 		doc->readonly = ! doc->readonly;
 		sci_set_readonly(doc->editor->sci, doc->readonly);
 		ui_update_tab_status(doc);
-		ui_update_statusbar(doc, -1);
+		ui_update_statusbar(doc);
 	}
 }
 
@@ -1334,6 +1334,21 @@ void on_menu_show_sidebar1_toggled(GtkCheckMenuItem *checkmenuitem, gpointer use
 }
 
 
+void on_menu_show_menubar1_toggled(GtkCheckMenuItem *checkmenuitem, gpointer user_data)
+{
+	if (ignore_callback)
+		return;
+
+	ui_menubar_show_hide(!ui_prefs.menubar_visible);
+}
+
+
+void on_show_menubar1_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+	ui_menubar_show_hide(!ui_prefs.menubar_visible);
+}
+
+
 static void on_menu_write_unicode_bom1_toggled(GtkCheckMenuItem *checkmenuitem, gpointer user_data)
 {
 	if (! ignore_callback)
@@ -1351,7 +1366,7 @@ static void on_menu_write_unicode_bom1_toggled(GtkCheckMenuItem *checkmenuitem, 
 
 		doc->has_bom = ! doc->has_bom;
 
-		ui_update_statusbar(doc, -1);
+		ui_update_statusbar(doc);
 	}
 }
 
@@ -1646,7 +1661,7 @@ static void set_indent_type(GtkCheckMenuItem *menuitem, GeanyIndentType type)
 	g_return_if_fail(doc != NULL);
 
 	editor_set_indent(doc->editor, type, doc->editor->indent_width);
-	ui_update_statusbar(doc, -1);
+	ui_update_statusbar(doc);
 }
 
 
@@ -1947,6 +1962,18 @@ static void on_indent_width_activate(GtkMenuItem *menuitem, gpointer user_data)
 }
 
 
+static void on_reset_indentation1_activate(GtkMenuItem *menuitem, gpointer user_data)
+{
+	guint i;
+
+	foreach_document(i)
+		document_apply_indent_settings(documents[i]);
+
+	ui_update_statusbar(NULL);
+	ui_document_show_hide(NULL);
+}
+
+
 static void on_mark_all1_activate(GtkMenuItem *menuitem, gpointer user_data)
 {
 	keybindings_send_command(GEANY_KEY_GROUP_SEARCH, GEANY_KEYS_SEARCH_MARKALL);
@@ -1962,7 +1989,7 @@ static void on_detect_type_from_file_activate(GtkMenuItem *menuitem, gpointer us
 	{
 		editor_set_indent_type(doc->editor, type);
 		ui_document_show_hide(doc);
-		ui_update_statusbar(doc, -1);
+		ui_update_statusbar(doc);
 	}
 }
 
