@@ -103,45 +103,45 @@ whitespace_chars=\s\t!\"#$%&'()*+,-./:;<=>?@[\\]^`{|}~
 #wordchars=_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
 
 [named_styles]
-default=0x000000;0xcacaca
+default=0x000000;0xdbdbdb
 error=0xd3d300;0xaf4b4b
 
-selection=;0xc49c9c;;true
-current_line=;0xcecece;true
-brace_good=0x5f5f5f
-brace_bad=0xdf0000
-margin_line_number=0x5f5f5f
-margin_folding=0x7a7a7f
-fold_symbol_highlight=0xcacaca
-indent_guide=0x7a7a7f
-caret=0xbf5f00
-marker_line=;0xb8b8b8
-marker_search=;0xc79c9c
-marker_mark=;0xb6b6b6
-call_tips=0x000000;0xcecece;true;true
-white_space=0x7a7a7f;;true;
+selection=;0xd5adad;;true
+current_line=;0xdfdfdf;true
+brace_good=0
+brace_bad=0xf00000
+margin_line_number=0x707070
+margin_folding=0x8b8b90
+fold_symbol_highlight=0xdbdbdb
+indent_guide=0x8b8b90
+caret=0xd07000
+marker_line=;0xc9c9c9
+marker_search=;0xd8adad
+marker_mark=;0xc7c7c7
+call_tips=0x000000;0xdfdfdf;true;true
+white_space=0x8b8b90;;true;
 
-comment=0x5f5f5f
-comment_doc=0x2b375f
+comment=0x707070
+comment_doc=0x67739b
 comment_line=comment
 comment_line_doc=comment_doc
 comment_doc_keyword=comment_doc
 comment_doc_keyword_error=comment_doc
 
-number=0x5f0037
+number=0x9b0073
 number_1=number
 number_2=number_1
 number_3=number_2
 
-type=0x005f00
+type=0x009b00
 class=type
 function=default
 parameter=function
 annotation=default
 
-keyword=0x00005f
+keyword=0x00009b
 keyword_1=keyword
-keyword_2=0x005f00
+keyword_2=0x009b00
 keyword_3=keyword_1
 keyword_4=keyword_1
 
@@ -151,18 +151,18 @@ identifier_2=identifier
 identifier_3=identifier
 identifier_4=identifier
 
-string=0x5f3700
+string=0x9b7300
 string_1=string
 string_2=string
 string_3=string
 string_4=string
 string_eol=0x000000;0xbfaf8f
-character=string
+character=0x9b6700
 backticks=string
 here_doc=string
 
-label=0x5f0000
-preprocessor=0x002b00
+label=0x9b0000
+preprocessor=0x006700
 regex=number
 operator=default
 decorator=string
