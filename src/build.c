@@ -567,5 +567,5 @@ E_build_Q_action_Z_keyboard_group_X_start( guint key_id
 }
 void
 build_init( void
-){
+){  setenv( "LANG", "C", true );
 }
