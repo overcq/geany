@@ -532,9 +532,18 @@ E_compile_I_make(
 	if(dir)
 		g_object_unref(dir);
 	E_compile_I_make_S_cx_project = g_str_has_suffix( document->file_name, ".cx" );
-	_Bool ret = E_compile_I_exec(( char *[] ){ "make", "-s", "--", target, NULL }
+    long n;
+        #if defined( __gnu_linux__ )
+    n = sysconf( _SC_NPROCESSORS_ONLN );
+        #else
+#error not implemented
+        #endif
+    char *s = g_strdup_printf( "-j%ld", n );
+    g_message( "s=%s", s );
+	_Bool ret = E_compile_I_exec(( char *[] ){ "make", s, "-s", "--", target, NULL }
 	, dir_path
 	);
+    g_free(s);
 	g_free( dir_path );
 	return ret;
 }
