@@ -108,7 +108,7 @@ error=0xd3d300;0xaf4b4b
 
 selection=;0xd5adad;;true
 current_line=;0xdfdfdf;true
-brace_good=0
+brace_good=0x3c70ff
 brace_bad=0xf00000
 margin_line_number=0x707070
 margin_folding=0x8b8b90
